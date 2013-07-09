@@ -60,6 +60,16 @@ class ShortCuts{
 			return MacroMirrors.build( );
 		}
 
+		/**
+		*
+		*
+		* @public
+		* @return	void
+		*/
+		static public function report( ) : Array<Field> {
+			return MacroErrReport.report( );
+		}
+
 		#end
 
 	// -------o protected
