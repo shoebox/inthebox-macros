@@ -100,7 +100,9 @@ class MacroInjector{
 
 
 				//
-					trace(" [INJECT] - "+(bWrite?"RW":"R-")+" | Optional name : "+sName);
+					#if verbose
+					Sys.println(" [INJECT] - "+(bWrite?"RW":"R-")+" | Optional name : "+sName);
+					#end
 
 				//New Methods name
 					sGet = "get_"+field.name;
