@@ -1,0 +1,13 @@
+{
+  "name": "inthebox-macros",
+  "url" : "https://github.com/shoebox/inthebox-macros",
+  "license": "BSD",
+  "tags": ["hyperfiction", "macro","shoebox","openfl"],
+  "description": "This project contains essential macros my extensions and Hyperfiction extensions ( HypFacebook...)",
+  "version": "1.0.0",
+  "releasenote": "Initial release",
+  "contributors": ["shoe[box]"],
+  "dependencies": {
+   "openfl": "1.0.4"
+  }
+}
