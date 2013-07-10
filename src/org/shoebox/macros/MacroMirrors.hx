@@ -139,6 +139,12 @@ class MacroMirrors{
 				}
 				sJNI += ")";
 
+			//For non static we convert the first argument type to dynamic
+				if( !bStatic ){
+					trace( "arg :::: "+f.args[ 0 ] );
+					f.args[ 0 ].type = TPath({ name : "Dynamic" , pack : [], params : [], sub : null });
+				}
+
 			//Return Type
 				sJNI += _translateType( ComplexTypeTools.toType( f.ret ) );
 
@@ -152,12 +158,17 @@ class MacroMirrors{
 				var fVar = _createVariable( sVar_name , f );
 
 			//Return response
+				f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); //Switching the return type to dynamic
 				var eRet = null;
-				trace( f.ret.getParameters( )[ 0 ].name );
-				if( f.ret.getParameters( )[ 0 ].name == "Void" )
+				if( f.ret.getParameters( )[ 0 ].name == "Void" ){
 					eRet = macro $i{sVar_name}( $a{aNames} );
-				else
-					eRet = macro return $i{sVar_name}( $a{aNames} );
+				}else{
+					eRet = macro{
+						var args : Array<Dynamic> = $a{ aNames };
+						trace( "call with args ::: "+args);
+						return $i{sVar_name}( $a{aNames} );
+					};
+				}
 
 			//Result
 
@@ -224,7 +235,7 @@ class MacroMirrors{
 							"["+_translateType( tp.getParameters( )[ 1 ][0] );
 
 						default:
-							"L"+c.pack.join(".")+( c.pack.length == 0 ? "" : "." ) + c.name+";";
+							"L"+c.pack.join("/")+( c.pack.length == 0 ? "" : "/" ) + c.name+";";
 
 					}
 
@@ -335,7 +346,7 @@ class MacroMirrors{
 
 			//
 				var k : FieldType = FVar(TFunction(aTypes , f.ret));
-						/*
+
 				return {
 							name : sName ,
 							doc : null,
@@ -344,16 +355,7 @@ class MacroMirrors{
 							kind : FVar(TPath({ pack : [], name : "Dynamic", params : [], sub : null }),null),
 							pos : Context.currentPos()
 						};
-			*/
-			//
-				return {
-					name	: sName ,
-					doc		: null,
-					meta	: [],
-					access	: [APrivate,AStatic],
-					kind	: k ,
-					pos		: haxe.macro.Context.currentPos()
-				};
+
 		}
 
 		/**
