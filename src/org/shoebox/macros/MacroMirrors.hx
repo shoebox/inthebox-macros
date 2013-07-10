@@ -151,6 +151,14 @@ class MacroMirrors{
 				var sVar_name : String = "mirror_jni_"+sName;
 				var fVar = _createVariable( sVar_name , f );
 
+			//Return response
+				var eRet = null;
+				trace( f.ret.getParameters( )[ 0 ].name );
+				if( f.ret.getParameters( )[ 0 ].name == "Void" )
+					eRet = macro $i{sVar_name}( $a{aNames} );
+				else
+					eRet = macro return $i{sVar_name}( $a{aNames} );
+
 			//Result
 
 				f.expr = macro{
@@ -180,7 +188,7 @@ class MacroMirrors{
 						}
 
 					//Making the call
-						return $i{sVar_name}( $a{aNames} );
+						$eRet;
 				}
 
 
@@ -283,6 +291,14 @@ class MacroMirrors{
 				var sVar_name : String = "mirror_cpp_"+sName;
 				var fVar = _createVariable( sVar_name , f );
 
+			//Return response
+
+				var eRet = macro "";
+				if( f.ret.getParameters( )[ 0 ].name == "Void" )
+					eRet = macro $i{sVar_name}( $a{aNames} );
+				else
+					eRet = macro return $i{sVar_name}( $a{aNames} );
+
 			//Result
 				f.expr = macro{
 
@@ -298,8 +314,7 @@ class MacroMirrors{
 
 						}
 
-					//Making the call
-						$i{sVar_name}( $a{aNames} );
+					$eRet;
 				}
 
 
@@ -320,7 +335,16 @@ class MacroMirrors{
 
 			//
 				var k : FieldType = FVar(TFunction(aTypes , f.ret));
-
+						/*
+				return {
+							name : sName ,
+							doc : null,
+							meta : [],
+							access : [APublic,AStatic],
+							kind : FVar(TPath({ pack : [], name : "Dynamic", params : [], sub : null }),null),
+							pos : Context.currentPos()
+						};
+			*/
 			//
 				return {
 					name	: sName ,
@@ -330,7 +354,6 @@ class MacroMirrors{
 					kind	: k ,
 					pos		: haxe.macro.Context.currentPos()
 				};
-
 		}
 
 		/**
