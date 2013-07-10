@@ -66,7 +66,7 @@ class ShortCuts{
 		* @public
 		* @return	void
 		*/
-		static public function report( ) : Array<Field> {
+		static public function errorReport( ) : Array<Field> {
 			return MacroErrReport.report( );
 		}
 
