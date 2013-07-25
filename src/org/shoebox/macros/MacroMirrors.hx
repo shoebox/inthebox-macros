@@ -141,7 +141,6 @@ class MacroMirrors{
 
 			//For non static we convert the first argument type to dynamic
 				if( !bStatic ){
-					trace( "arg :::: "+f.args[ 0 ] );
 					f.args[ 0 ].type = TPath({ name : "Dynamic" , pack : [], params : [], sub : null });
 				}
 
@@ -346,7 +345,7 @@ class MacroMirrors{
 
 			//
 				var k : FieldType = FVar(TFunction(aTypes , f.ret));
-
+						/*
 				return {
 							name : sName ,
 							doc : null,
@@ -355,7 +354,16 @@ class MacroMirrors{
 							kind : FVar(TPath({ pack : [], name : "Dynamic", params : [], sub : null }),null),
 							pos : Context.currentPos()
 						};
-
+			*/
+			//
+				return {
+					name	: sName ,
+					doc		: null,
+					meta	: [],
+					access	: [APrivate,AStatic],
+					kind	: k ,
+					pos		: haxe.macro.Context.currentPos()
+				};
 		}
 
 		/**
