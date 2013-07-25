@@ -60,6 +60,7 @@ class MacroInjector{
 			var sGet	: String;
 			var sName	: String;
 			var sSet	: String;
+			var aMetas : Array<MetadataEntry>;
 			for( field in aFields ){
 
 				//Reset
@@ -68,7 +69,7 @@ class MacroInjector{
 					sName	= null;
 
 				//Meta
-					var aMetas : Array<MetadataEntry> = [ for( m in field.meta ) if( m.name == "inject") m ];
+					aMetas = [ for( m in field.meta ) if( m.name == "inject") m ];
 
 				//No meta data
 					if( aMetas.length == 0 )
@@ -114,11 +115,11 @@ class MacroInjector{
 					var sKind : String = Std.string( oKind )+"";
 
 				//Getter
-					aCopy.push( _createField( true , sName , field.pos , sGet , ct.toString( )+"" , ct , false ) );
+					aCopy.push( _createField( true , sName, field.access, field.pos , sGet , ct.toString( )+"" , ct , false ) );
 
 				//Setter
 					if( bWrite )
-						aCopy.push( _createField( false , sName , field.pos , sSet , ct.toString( )+"" , ct , false ) );
+						aCopy.push( _createField( false , sName , field.access , field.pos , sSet , ct.toString( )+"" , ct , false ) );
 
 				//the new getter/setter
 					var type : FieldType = FProp( sGet , sSet , ct );
@@ -127,7 +128,7 @@ class MacroInjector{
 						name	: field.name ,
 						doc		: null,
 						meta	: [],
-						access	: [APublic],
+						access	: field.access,
 						kind	: type,
 						pos		: field.pos
 					};
@@ -152,6 +153,7 @@ class MacroInjector{
 		static private function _createField(
 												bGetter			: Bool,
 												sOptional_name	: String,
+												aAccess			: Array<Access> ,
 												pos				: Position ,
 												sName			: String ,
 												sKind			: String,
@@ -160,7 +162,6 @@ class MacroInjector{
 												bStatic			: Bool = false
 											) : Field{
 
-			//trace("_createField ::: "+bGetter+" - "+sName);
 			var e = Context.makeExpr( sKind , pos );
 			var func : Function = { args : [ ] , expr : null , params : [] , ret : ct };
 
@@ -189,7 +190,7 @@ class MacroInjector{
 									name	: sName ,
 									doc		: null,
 									meta	: [],
-									access	: [APublic],
+									access	: aAccess,
 									kind	: FFun( func ),
 									pos		: pos
 								};
