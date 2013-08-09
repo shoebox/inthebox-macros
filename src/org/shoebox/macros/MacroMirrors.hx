@@ -157,7 +157,9 @@ class MacroMirrors{
 				var fVar = _createVariable( sVar_name , f );
 
 			//Return response
-				f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); //Switching the return type to dynamic
+				if( f.ret.getParameters( )[0].name != "Void")
+					f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); //Switching the return type to dynamic
+
 				var eRet = null;
 				if( f.ret.getParameters( )[ 0 ].name == "Void" ){
 					eRet = macro $i{sVar_name}( $a{aNames} );
