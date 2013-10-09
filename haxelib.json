@@ -1,0 +1,13 @@
+{
+  "name": "inthebox-macros",
+  "url" : "https://github.com/shoebox/inthebox-macros",
+  "license": "BSD",
+  "tags": ["hyperfiction","shoebox","openfl"],
+  "description": "",
+  "version": "1.0.0",
+  "releasenote": "Initial release",
+  "contributors": ["shoe[box]"],
+  "dependencies": {
+   "openfl": ""
+  }
+}
