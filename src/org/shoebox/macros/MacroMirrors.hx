@@ -321,8 +321,11 @@ class MacroMirrors{
 								trace( $v{ sPackage }+"::"+$v{ sName }+'($iArgs)' );
 							#end
 
-							//
-								$i{ sVar_name } = cpp.Lib.load( $v{ sPackage } , $v{ sName } , $v{ iArgs });
+                            var primitive = $v{ sName };
+                            if ($v{ sPackage } != null && $v{ sPackage } != "") {
+                                primitive = $v{ sPackage } + "_" + $v{ sName };
+                            }
+							$i{ sVar_name } = cpp.Lib.load( $v{ sPackage } , primitive , $v{ iArgs });
 
 						}
 
