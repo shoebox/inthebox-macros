@@ -168,22 +168,29 @@ class MacroInjector{
 			if( bGetter ){
 				//trace( "getter :: "+$i{ sKind }+" - "+sOptional_name );
 				func.expr = macro {
+					#if inthebox
 					return org.shoebox.patterns.injector.Injector.getInstance( ).get(
 						cast( $i{ sKind } , Class<Dynamic> ),
 						$v{ sOptional_name }
 					);
+					#else
+					return null;
+					#end
 				};
 
 			}else{
 				func.args.push( { name : "arg", type : ct , opt : false, value : null } );
 				func.expr = macro {
 					//trace( $i{ "arg" } );
+					#if inthebox
 					return org.shoebox.patterns.injector.Injector.getInstance( ).set(
 						$i{ "arg" },
 						cast( $i{ sKind } , Class<Dynamic> ),
 						$v{ sOptional_name }
 					);
-
+					#else
+					return null;
+					#end
 				};
 			}
 			var fRes : Field = {

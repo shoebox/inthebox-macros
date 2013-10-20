@@ -1,0 +1,10 @@
+{
+	"name": "inthebox-macros",
+	"url" : "https://github.com/shoebox/inthebox-macros",
+	"license": "BSD",
+	"tags": ["hyperfiction", "macro","shoebox","openfl"],
+	"description": "Essential macros for native extensions",
+	"version": "1.0.0",
+	"releasenote": "Initial release",
+	"contributors": ["shoebox"]  
+}
