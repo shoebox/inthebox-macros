@@ -56,9 +56,12 @@ class MacroMirrors{
 				var aFields : Array<Field> = Context.getBuildFields( );
 				var oClass : Null<Ref<ClassType>> = Context.getLocalClass( );
 
+			//OpenFL only
+				if(!Context.defined("openfl"))
+					return aFields;
+
 			//
 				var sClass_name : String = oClass.get( ).name;
-
 
 			//
 				var aMetas : Array<MetadataEntry>;
@@ -74,23 +77,25 @@ class MacroMirrors{
 							continue;
 
 					//
-						for( m in aMetas ){
+						for(m in aMetas)
+						{
 
-							if( m.name == "CPP" ){
-
+							if(m.name == "CPP" && Context.defined("cpp"))
+							{
+								Sys.println("cpp");
 								aFields.push( _cpp(
 									field ,
 									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : sClass_name,
 									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
 								) );
-
-							}else if( m.name == "JNI" ){
+							}
+							else if( m.name == "JNI" && Context.defined("android"))
+							{
 								aFields.push( _jni(
 									field ,
 									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : oClass.get( ).module,
 									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
 								) );
-
 							}
 
 						}
@@ -113,7 +118,7 @@ class MacroMirrors{
 		* @return	the new instance field ( Field )
 		*/
 		static private function _jni( oField : Field , sPackage : String , ?sName : String ) : Field{
-
+			
 			//The function
 				var f : Function = _getFunc( oField );
 				var bStatic = Lambda.has( oField.access , AStatic );
@@ -148,7 +153,7 @@ class MacroMirrors{
 				sJNI += _translateType( ComplexTypeTools.toType( f.ret ) );
 
 			//Verbose
-				#if verbose
+				#if verbose_cpp
 				trace( '[MIRROR] - JNI $sPackage::$sName $sJNI' );
 				#end
 
@@ -177,7 +182,7 @@ class MacroMirrors{
 
 					//Already loaded ?
 						if( $i{ sVar_name } == null ){
-							#if verbose
+							#if verbose_cpp
 								trace("Lib not loaded, loading it");
 								trace( $v{ sPackage }+"::"+$v{ sName }+' :: signature '+$v{ sJNI } );
 							#end
@@ -295,7 +300,7 @@ class MacroMirrors{
 				var aNames : Array<Expr> = [ for( a in f.args ) macro $i{ a.name } ];
 
 			//Verbose
-				#if verbose
+				#if verbose_cpp
 				trace( '[MIRROR] - CPP $sPackage::'+oField.name+'($iArgs)' );
 				#end
 
@@ -316,7 +321,7 @@ class MacroMirrors{
 
 					//Already loaded ?
 						if( $i{ sVar_name } == null ){
-							#if verbose
+							#if verbose_cpp
 								trace("Lib not loaded, loading it");
 								trace( $v{ sPackage }+"::"+$v{ sName }+'($iArgs)' );
 							#end
