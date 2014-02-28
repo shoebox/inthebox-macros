@@ -96,6 +96,14 @@ class MacroMirrors{
 									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
 								) );
 							}
+							else if( m.name == "IOS" && Context.defined("ios"))
+							{
+								aFields.push( _cpp(
+									field ,
+									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : oClass.get( ).module,
+									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
+								) );
+							}
 
 						}
 
