@@ -82,7 +82,6 @@ class MacroMirrors{
 
 							if(m.name == "CPP" && Context.defined("cpp"))
 							{
-								Sys.println("cpp");
 								aFields.push( _cpp(
 									field ,
 									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : sClass_name,
@@ -121,6 +120,9 @@ class MacroMirrors{
 			
 			//The function
 				var f : Function = _getFunc( oField );
+				if(f.ret == null)
+					f.ret = TPath({ name : "Void", pack : [], params : [] });
+				
 				var bStatic = Lambda.has( oField.access , AStatic );
 
 			//Arguments
@@ -150,10 +152,13 @@ class MacroMirrors{
 				}
 
 			//Return Type
-				sJNI += _translateType( ComplexTypeTools.toType( f.ret ) );
+				if(f.ret==null)
+					sJNI += "V";
+				else
+					sJNI += _translateType( ComplexTypeTools.toType( f.ret ) );
 
 			//Verbose
-				#if verbose_cpp
+				#if verbose_mirrors
 				trace( '[MIRROR] - JNI $sPackage::$sName $sJNI' );
 				#end
 
@@ -171,7 +176,9 @@ class MacroMirrors{
 				}else{
 					eRet = macro{
 						var args : Array<Dynamic> = $a{ aNames };
+						#if verbose_mirrors
 						trace( "call with args ::: "+args);
+						#end
 						return $i{sVar_name}( $a{aNames} );
 					};
 				}
@@ -182,7 +189,7 @@ class MacroMirrors{
 
 					//Already loaded ?
 						if( $i{ sVar_name } == null ){
-							#if verbose_cpp
+							#if verbose_mirrors
 								trace("Lib not loaded, loading it");
 								trace( $v{ sPackage }+"::"+$v{ sName }+' :: signature '+$v{ sJNI } );
 							#end
@@ -300,7 +307,7 @@ class MacroMirrors{
 				var aNames : Array<Expr> = [ for( a in f.args ) macro $i{ a.name } ];
 
 			//Verbose
-				#if verbose_cpp
+				#if verbose_mirrors
 				trace( '[MIRROR] - CPP $sPackage::'+oField.name+'($iArgs)' );
 				#end
 
@@ -321,7 +328,7 @@ class MacroMirrors{
 
 					//Already loaded ?
 						if( $i{ sVar_name } == null ){
-							#if verbose_cpp
+							#if verbose_mirrors
 								trace("Lib not loaded, loading it");
 								trace( $v{ sPackage }+"::"+$v{ sName }+'($iArgs)' );
 							#end
