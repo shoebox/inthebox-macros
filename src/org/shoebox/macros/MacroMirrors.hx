@@ -51,7 +51,7 @@ class MacroMirrors{
 		* @return	void
 		*/
 		static public function build( ) : Array<Field>{
-
+			
 			//Fields
 				var aFields : Array<Field> = Context.getBuildFields( );
 				var oClass : Null<Ref<ClassType>> = Context.getLocalClass( );
@@ -70,7 +70,7 @@ class MacroMirrors{
 				for( field in aFields.copy( ) ){
 
 					//
-						aMetas = [ for( m in field.meta ) if( m.name == "CPP" || m.name == "JNI" ) m ];
+						aMetas = [ for( m in field.meta ) if( m.name == "CPP" || m.name == "JNI" || m.name == "IOS" ) m ];
 
 					//
 						if( aMetas.length == 0 )
@@ -79,7 +79,6 @@ class MacroMirrors{
 					//
 						for(m in aMetas)
 						{
-
 							if(m.name == "CPP" && Context.defined("cpp"))
 							{
 								aFields.push( _cpp(
