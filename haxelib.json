@@ -4,7 +4,7 @@
 	"license": "BSD",
 	"tags": ["hyperfiction", "macro","shoebox","openfl"],
 	"description": "Essential macros for native extensions",
-	"version": "1.0.2",
-	"releasenote": "@iOS meta",
+	"version": "1.0.3",
+	"releasenote": "Replace dot by slash in JNI package name",
 	"contributors": ["shoebox"]  
 }

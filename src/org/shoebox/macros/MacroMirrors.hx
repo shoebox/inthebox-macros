@@ -125,6 +125,8 @@ class MacroMirrors{
 		*/
 		static private function _jni( oField : Field , sPackage : String , ?sName : String ) : Field{
 			
+			sPackage = sPackage.split(".").join("/");
+			
 			//The function
 				var f : Function = _getFunc( oField );
 				if(f.ret == null)
