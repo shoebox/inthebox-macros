@@ -4,7 +4,8 @@
 	"license": "BSD",
 	"tags": ["hyperfiction", "macro","shoebox","openfl"],
 	"description": "Essential macros for native extensions",
-	"version": "1.0.3",
-	"releasenote": "Replace dot by slash in JNI package name",
+	"classPath":"src/",
+	"version": "1.0.4",
+	"releasenote": "The library is now usable as a haxelib (missing 'classPath' node)",
 	"contributors": ["shoebox"]  
 }
