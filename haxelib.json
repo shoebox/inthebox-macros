@@ -4,8 +4,8 @@
 	"license": "BSD",
 	"tags": ["hyperfiction", "macro","shoebox","openfl"],
 	"description": "Essential macros for native extensions",
-	"version": "1.0.2",
 	"classPath":"src/",
-	"releasenote": "@iOS meta",
+	"version": "1.0.4",
+	"releasenote": "The library is now usable as a haxelib (missing 'classPath' node)",
 	"contributors": ["shoebox"]  
 }
