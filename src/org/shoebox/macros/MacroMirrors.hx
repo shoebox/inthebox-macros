@@ -244,7 +244,7 @@ class MacroMirrors{
 					_jniAbstract_type( cf.get( ) );
 
 				case TDynamic( t ):
-					"Lorg/haxe/nme/HaxeObject;";
+					"Lorg/haxe/lime/HaxeObject;";
 
 				default:
 					c = tp.getParameters( )[ 0 ].get( );
