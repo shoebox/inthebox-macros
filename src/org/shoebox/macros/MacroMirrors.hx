@@ -81,141 +81,72 @@ class MacroMirrors
 	{
 		packageName = packageName.split(".").join("/");
 		
-		//The function
-			var f : Function = FieldTool.getFunction(field);
-			if (f.ret == null)
-				f.ret = TPath({ name : "Void", pack : [], params : [] });
+		var f : Function = FieldTool.getFunction(field);
+		if (f.ret == null)
+			f.ret = TPath({ name : "Void", pack : [], params : [] });
 			
-			var isStaticMethod = Lambda.has( field.access , AStatic );
+		var isStaticMethod = Lambda.has( field.access , AStatic );
 
-		//Arguments
-			var argsCount : Int = f.args.length;
-			var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
+		var argsCount : Int = f.args.length;
+		var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
+		var signature = JniTools.getSignature(field);
 
-		//JNI Arguments translation
-			var signature = JniTools.getSignature(field);
+		if ( !isStaticMethod )
+			f.args[ 0 ].type = TPath({name:"Dynamic", pack:[], 
+				params:[], sub:null});
 
-		//For non static we convert the first argument type to dynamic
-			if ( !isStaticMethod )
-				f.args[ 0 ].type = TPath({ name : "Dynamic" , pack : [], params : [], sub : null });
+		
+		//#if verbose_mirrors
+		Sys.println('[JNI] $packageName::$variableName $signature');
+		//#end
 
-		//Verbose
+		var mirrorName:String = "mirror_jni_"+variableName;
+		var fVar = createVariable(mirrorName ,f, field.pos);
+
+		var returnType:String = f.ret.getParameters( )[0].name;
+		var returnExpr = null;
+		if(returnType == "Void" )
+		{
+			returnExpr = macro $i{mirrorName}($a{argumentNames});
+		}
+		else
+		{
+			//Switching the return type to dynamic
+			f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); 
+
+			returnExpr = macro
+			{
+				var args : Array<Dynamic> = $a{ argumentNames };
+				#if verbose_mirrors
+				trace( "call with args ::: "+args);
+				#end
+				return $i{mirrorName}( $a{argumentNames} );
+			};
+		}
+
+		f.expr = macro
+		{
+			//Already loaded ?
+			if ($i{mirrorName} == null)
+			{
+				#if verbose_mirrors
+				trace("Lib not loaded, loading it");
+				trace( $v{ packageName } + " :: " + $v{mirrorName} 
+					+ ' :: signature '+$v{ signature } );
+				#end
+
+				if ($v{isStaticMethod})
+					$i{mirrorName} = openfl.utils.JNI.createStaticMethod(
+						$v{packageName}, $v{variableName}, $v{signature});
+				else
+					$i{mirrorName} = openfl.utils.JNI.createMemberMethod(
+						$v{packageName}, $v{variableName}, $v{signature});
+			}
 			
-			Sys.println('[MIRROR] - JNI $packageName::$variableName $signature');
-			#if verbose_mirrors
-			#end
-
-		//Variable
-			var sVar_name : String = "mirror_jni_"+variableName;
-			var fVar = createVariable( sVar_name , f );
-
-		//Return response
-			if ( f.ret.getParameters( )[0].name != "Void")
-				f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); //Switching the return type to dynamic
-
-			var eRet = null;
-			if ( f.ret.getParameters( )[ 0 ].name == "Void" )
-			{
-				eRet = macro $i{sVar_name}( $a{argumentNames} );
-			}
-			else
-			{
-				eRet = macro
-				{
-					var args : Array<Dynamic> = $a{ argumentNames };
-					#if verbose_mirrors
-					trace( "call with args ::: "+args);
-					#end
-					return $i{sVar_name}( $a{argumentNames} );
-				};
-			}
-
-		//Result
-
-			f.expr = macro
-			{
-
-				//Already loaded ?
-					if ( $i{ sVar_name } == null )
-					{
-						#if verbose_mirrors
-							trace("Lib not loaded, loading it");
-							trace( $v{ packageName }+"::"+$v{ variableName }+' :: signature '+$v{ signature } );
-						#end
-
-						//
-							if ( $v{ isStaticMethod } )
-								$i{ sVar_name } = openfl.utils.JNI.createStaticMethod(
-									$v{packageName},
-									$v{variableName},
-									$v{signature}
-								);
-							else
-								$i{ sVar_name } = openfl.utils.JNI.createMemberMethod(
-									$v{packageName},
-									$v{variableName},
-									$v{signature}
-								);
-
-
-					}
-
-				//Making the call
-					$eRet;
-			}
-
+			$returnExpr;
+		}
 
 		return fVar;
-	}
-
-	static function _translateType( tp : Null<Type> ) : String{
-
-		var c : ClassType;
-		return switch( tp ){
-
-			case TAbstract( cf , a ):
-				_jniAbstract_type( cf.get( ) );
-
-			case TDynamic( t ):
-				"Lorg/haxe/nme/HaxeObject;";
-
-			default:
-				c = tp.getParameters( )[ 0 ].get( );
-				switch( c.name ){
-
-					case "String":
-						"Ljava/lang/String;";
-
-					case "Array":
-						"["+_translateType( tp.getParameters( )[ 1 ][0] );
-
-					default:
-						"L"+c.pack.join("/")+( c.pack.length == 0 ? "" : "/" ) + c.name+";";
-
-				}
-		}
-	}
-
-	static function _jniAbstract_type( cf : AbstractType ) : String{
-
-		return switch( cf.name ){
-
-			case "Float":
-				"F";
-
-			case "Bool":
-				"Z";
-
-			case "Int":
-				"I";
-
-			case "Void":
-				"V";
-
-			default:
-				Context.error("Unknow abstract type ::: "+cf.name , Context.currentPos( ) );
-
-		}
 	}
 
 	static function cpp( field:Field, packageName : String, ?name : String ) : Field{
@@ -225,30 +156,29 @@ class MacroMirrors
 		var argsCount : Int = f.args.length;
 		var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
 		
-		trace( '[MIRROR] - CPP $packageName::'+field.name+'($argsCount)' );
 		#if verbose_mirrors
+		Sys.println('[CPP] $packageName::'+field.name+'($argsCount)');
 		#end
 
-		var variableName : String = "mirror_cpp_"+name;
-		var fieldVariable = createVariable(variableName, f);
-
+		var mirrorName : String = "mirror_cpp_"+name;
+		var fieldVariable = createVariable(mirrorName, f, field.pos);
 		var returnExpr = macro "";
 
 		if ( f.ret.getParameters( )[ 0 ].name == "Void" )
-			returnExpr = macro $i{variableName}( $a{argumentNames} );
+			returnExpr = macro $i{mirrorName}($a{argumentNames});
 		else
-			returnExpr = macro return $i{variableName}( $a{argumentNames} );
+			returnExpr = macro return $i{mirrorName}($a{argumentNames});
 
 		f.expr = macro
 		{
-			if ($i{variableName} == null)
+			if ($i{mirrorName} == null)
 			{
 				#if verbose_mirrors
 				trace("Lib not loaded, loading it");
 				trace($v{packageName}+"::"+$v{name}+'($argsCount)');
 				#end
 
-				$i{ variableName } = cpp.Lib.load($v{packageName}, $v{name}, 
+				$i{mirrorName} = cpp.Lib.load($v{packageName}, $v{name}, 
 					$v{argsCount});
 			}
 			$returnExpr;
@@ -257,18 +187,18 @@ class MacroMirrors
 		return fieldVariable;
 	}
 
-	static function createVariable(name:String, f:Function):Field
+	static function createVariable(variableName:String, refFunction:Function, positon:Position):Field
 	{
-		var aTypes : Array<Null<ComplexType>> = [ for ( a in f.args ) a.type ];
-		var k : FieldType = FVar(TFunction(aTypes , f.ret));
+		var types = [for (arg in refFunction.args) arg.type];
+		var fieldType : FieldType = FVar(TFunction(types, refFunction.ret));
 			
 		return {
-			name	: name ,
+			name	: variableName,
 			doc		: null,
 			meta	: [],
 			access	: [APublic,AStatic],
-			kind	: k ,
-			pos		: haxe.macro.Context.currentPos()
+			kind	: fieldType,
+			pos		: positon
 		};
 	}
 
