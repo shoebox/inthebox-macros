@@ -28,52 +28,75 @@ using haxe.macro.Tools;
  */
 class MacroMirrors
 {
+	public static inline var CPP_META:String = "CPP";
+	public static inline var IOS_META:String = "IOS";
+	public static inline var JNI_META:String = "JNI";
+
 	public static function build():Array<Field>
 	{
-		
 		var fields:Array<Field> = Context.getBuildFields( );
-		var localClass:Null<Ref<ClassType>> = Context.getLocalClass( );
-
+		var localClass:ClassType = Context.getLocalClass( ).get();
 		if (!Context.defined("openfl"))
 			return fields;
 
-		var metadatas : Array<MetadataEntry>;
-
+		var result:Field;
 		for (field in fields.copy())
 		{
-			metadatas = [for (m in field.meta ) 
-				if (m.name == "CPP" || m.name == "JNI" || m.name == "IOS" ) m];
-
-			if ( metadatas.length == 0 )
-				continue;
-
-			for (m in metadatas)
+			result = parseField(field, localClass);
+			if(result != null)
 			{
-				if (m.name == "CPP" && Context.defined("cpp"))
-				{
-					fields.push( cpp(field,
-						( m.params.length > 0 ) ? getString( m.params[ 0 ] ) : localClass.get( ).name,
-						( m.params.length > 1 ) ? getString( m.params[ 1 ] ) : field.name
-					) );
-				}
-				else if (m.name == "JNI" && Context.defined("android"))
-				{
-					fields.push(jni(field,
-						( m.params.length > 0 ) ? getString( m.params[ 0 ] ) : localClass.get( ).module,
-						( m.params.length > 1 ) ? getString( m.params[ 1 ] ) : field.name
-					) );
-				}
-				else if (m.name == "IOS" && Context.defined("ios"))
-				{
-					fields.push( cpp(field,
-						( m.params.length > 0 ) ? getString( m.params[ 0 ] ) : localClass.get( ).module,
-						( m.params.length > 1 ) ? getString( m.params[ 1 ] ) : field.name
-					) );
-				}
+				fields.push(result);
+				result = null;
 			}
 		}
 
 		return fields;
+	}
+
+	static function parseField(field:Field, localClass:ClassType):Field
+	{
+		var metadatas = [for (m in field.meta ) 
+			if (m.name == "CPP" || m.name == "JNI" || m.name == "IOS" ) m];
+
+		if ( metadatas.length == 0 )
+			return null;
+
+		var result:Field;
+		var meta:MetadataEntry;
+		var metaLength:Int;
+
+		if(MetaDataTools.has(field, CPP_META) && Context.defined("cpp"))
+		{
+			meta = MetaDataTools.get(field, CPP_META);
+			metaLength = meta.params.length;
+
+			result = cpp(field,
+				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.name,
+				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
+			);	
+		}
+		else if(MetaDataTools.has(field, JNI_META) && Context.defined("android"))
+		{
+			meta = MetaDataTools.get(field, JNI_META);
+			metaLength = meta.params.length;
+
+			result = jni(field,
+				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
+				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
+			);	
+		}
+		else if(MetaDataTools.has(field, IOS_META) && Context.defined("ios"))
+		{
+			meta = MetaDataTools.get(field, IOS_META);
+			metaLength = meta.params.length;
+
+			result = cpp(field,
+				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
+				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
+			);	
+		}
+
+		return result;
 	}
 
 	static function jni(field:Field, packageName:String, 
