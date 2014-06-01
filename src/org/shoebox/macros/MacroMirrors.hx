@@ -55,12 +55,6 @@ class MacroMirrors
 
 	static function parseField(field:Field, localClass:ClassType):Field
 	{
-		var metadatas = [for (m in field.meta ) 
-			if (m.name == "CPP" || m.name == "JNI" || m.name == "IOS" ) m];
-
-		if ( metadatas.length == 0 )
-			return null;
-
 		var result:Field;
 		var meta:MetadataEntry;
 		var metaLength:Int;
@@ -69,6 +63,7 @@ class MacroMirrors
 		{
 			meta = MetaDataTools.get(field, CPP_META);
 			metaLength = meta.params.length;
+			checkMetaArgsCount(meta, 2, 2);
 
 			result = cpp(field,
 				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.name,
@@ -79,6 +74,7 @@ class MacroMirrors
 		{
 			meta = MetaDataTools.get(field, JNI_META);
 			metaLength = meta.params.length;
+			checkMetaArgsCount(meta, 0, 2);
 
 			result = jni(field,
 				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
@@ -89,6 +85,7 @@ class MacroMirrors
 		{
 			meta = MetaDataTools.get(field, IOS_META);
 			metaLength = meta.params.length;
+			checkMetaArgsCount(meta, 0, 2);
 
 			result = cpp(field,
 				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
@@ -97,6 +94,15 @@ class MacroMirrors
 		}
 
 		return result;
+	}
+
+	static function checkMetaArgsCount(meta:MetadataEntry, min:Int, max:Int):Void
+	{
+		var metaName = meta.name;
+		var count = meta.params.length;
+		if (count > max || count < min)
+			Context.error('Invalid arguments count for the meta $metaName', 
+				meta.pos);
 	}
 
 	static function jni(field:Field, packageName:String, 
@@ -179,15 +185,15 @@ class MacroMirrors
 		var argsCount : Int = f.args.length;
 		var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
 		
-		#if verbose_mirrors
+		//#if verbose_mirrors
 		Sys.println('[CPP] $packageName::'+field.name+'($argsCount)');
-		#end
+		//#end
 
 		var mirrorName : String = "mirror_cpp_"+name;
 		var fieldVariable = createVariable(mirrorName, f, field.pos);
 		var returnExpr = macro "";
 
-		if ( f.ret.getParameters( )[ 0 ].name == "Void" )
+		if (f.ret.getParameters( )[ 0 ].name == "Void")
 			returnExpr = macro $i{mirrorName}($a{argumentNames});
 		else
 			returnExpr = macro return $i{mirrorName}($a{argumentNames});
@@ -215,7 +221,8 @@ class MacroMirrors
 		var types = [for (arg in refFunction.args) arg.type];
 		var fieldType : FieldType = FVar(TFunction(types, refFunction.ret));
 			
-		return {
+		return
+		{
 			name	: variableName,
 			doc		: null,
 			meta	: [],
@@ -231,7 +238,8 @@ class MacroMirrors
 		if ( e == null )
 			return null;
 
-		return switch( e.expr.getParameters( )[ 0 ] ){
+		return switch( e.expr.getParameters( )[ 0 ] )
+		{
 
 			case CString( s ):
 				s;
@@ -240,19 +248,18 @@ class MacroMirrors
 				null;
 
 		}
-
 	}
 
 	static function getFunc(f:Field):Function
 	{
-		return switch( f.kind ){
+		return switch(f.kind)
+		{
 
-			case FFun( f ):
+			case FFun(f):
 				f;
 
 			default:
 				Context.error("Only function are supported",f.pos);
-
 		}
 	}
 
@@ -371,7 +378,7 @@ class FieldTool
 				result = f;
 
 			default:
-				Context.error("Only function are supported",field.pos);
+				Context.error("Only function are supported", field.pos);
 		}
 
 		return result;
