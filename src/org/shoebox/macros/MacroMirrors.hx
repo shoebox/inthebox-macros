@@ -85,7 +85,7 @@ class MacroMirrors
 		{
 			meta = MetaDataTools.get(field, IOS_META);
 			metaLength = meta.params.length;
-			checkMetaArgsCount(meta, 0, 2);
+			checkMetaArgsCount(meta, 2, 2);
 
 			result = cpp(field,
 				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
@@ -110,38 +110,31 @@ class MacroMirrors
 	{
 		packageName = packageName.split(".").join("/");
 		
-		var f : Function = FieldTool.getFunction(field);
-		if (f.ret == null)
-			f.ret = TPath({ name : "Void", pack : [], params : [] });
-			
-		var isStaticMethod = Lambda.has( field.access , AStatic );
-
-		var argsCount : Int = f.args.length;
-		var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
+		var result:Function = FieldTool.getFunction(field);
+		if (result.ret == null)
+			result.ret = TPath({name:"Void", pack:[], params:[] });
+		
+		var argumentNames:Array<Expr> = getArgsNames(result);
 		var signature = JniTools.getSignature(field);
 
-		if ( !isStaticMethod )
-			f.args[ 0 ].type = TPath({name:"Dynamic", pack:[], 
+		if (!isStaticField(field))
+			result.args[ 0 ].type = TPath({name:"Dynamic", pack:[], 
 				params:[], sub:null});
 
-		
-		//#if verbose_mirrors
+		#if verbose_mirrors
 		Sys.println('[JNI] $packageName::$variableName $signature');
-		//#end
+		#end
 
 		var mirrorName:String = "mirror_jni_"+variableName;
-		var fVar = createVariable(mirrorName ,f, field.pos);
-
-		var returnType:String = f.ret.getParameters( )[0].name;
+		var resultVariable = createVariable(mirrorName, result, field.pos);
+		var returnType:String = result.ret.getParameters( )[0].name;
 		var returnExpr = null;
-		if(returnType == "Void" )
-		{
-			returnExpr = macro $i{mirrorName}($a{argumentNames});
-		}
-		else
+		var isStaticMethod = isStaticField(field);
+
+		if(returnType != "Void")
 		{
 			//Switching the return type to dynamic
-			f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); 
+			result.ret = TPath({name:"Dynamic", pack:[], params:[], sub:null}); 
 
 			returnExpr = macro
 			{
@@ -152,16 +145,16 @@ class MacroMirrors
 				return $i{mirrorName}( $a{argumentNames} );
 			};
 		}
+		else
+			returnExpr = macro $i{mirrorName}($a{argumentNames});
 
-		f.expr = macro
+		result.expr = macro
 		{
-			//Already loaded ?
 			if ($i{mirrorName} == null)
 			{
 				#if verbose_mirrors
 				trace("Lib not loaded, loading it");
-				trace( $v{ packageName } + " :: " + $v{mirrorName} 
-					+ ' :: signature '+$v{ signature } );
+				trace($v{packageName} + " :: " + $v{mirrorName} + ' :: signature '+$v{signature});
 				#end
 
 				if ($v{isStaticMethod})
@@ -175,30 +168,31 @@ class MacroMirrors
 			$returnExpr;
 		}
 
-		return fVar;
+		return resultVariable;
 	}
 
-	static function cpp( field:Field, packageName : String, ?name : String ) : Field{
+	static function cpp(field:Field, packageName:String, ?name:String ) : Field
+	{
 
-		var f:Function = getFunc( field );
+		var func:Function = getFunc(field);
 
-		var argsCount : Int = f.args.length;
-		var argumentNames : Array<Expr> = [ for ( a in f.args ) macro $i{ a.name } ];
+		var argsCount:Int = func.args.length;
+		var argumentNames:Array<Expr> = getArgsNames(func);
 		
-		//#if verbose_mirrors
+		#if verbose_mirrors
 		Sys.println('[CPP] $packageName::'+field.name+'($argsCount)');
-		//#end
+		#end
 
 		var mirrorName : String = "mirror_cpp_"+name;
-		var fieldVariable = createVariable(mirrorName, f, field.pos);
+		var fieldVariable = createVariable(mirrorName, func, field.pos);
 		var returnExpr = macro "";
 
-		if (f.ret.getParameters( )[ 0 ].name == "Void")
+		if (func.ret.getParameters( )[ 0 ].name == "Void")
 			returnExpr = macro $i{mirrorName}($a{argumentNames});
 		else
 			returnExpr = macro return $i{mirrorName}($a{argumentNames});
 
-		f.expr = macro
+		func.expr = macro
 		{
 			if ($i{mirrorName} == null)
 			{
@@ -263,6 +257,17 @@ class MacroMirrors
 		}
 	}
 
+	static inline function getArgsNames(func:Function):Array<Expr>
+	{
+		var result:Array<Expr> = [for (a in func.args) macro $i{ a.name }];
+		return result;
+	}
+
+	static inline function isStaticField(field:Field):Bool
+	{
+		var result = Lambda.has(field.access, AStatic);
+		return result;
+	}
 }
 
 class JniTools
@@ -272,10 +277,8 @@ class JniTools
 		var func:Function = FieldTool.getFunction(field);
 		var signature = "(";
 		for(arg in func.args)
-		{
 			signature += translateArg(arg, field.pos);
-		}
-
+		
 		var returnType:Null<Type> = func.ret.toType();
 
 		signature += ")" + translateType(returnType, field.pos);
