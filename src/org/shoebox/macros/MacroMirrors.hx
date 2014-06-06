@@ -31,13 +31,22 @@ class MacroMirrors
 	public static inline var CPP_META:String = "CPP";
 	public static inline var IOS_META:String = "IOS";
 	public static inline var JNI_META:String = "JNI";
+	public static inline var CPP_DEFAULT_LIB:String = "CPP_DEFAULT_LIBRARY";
+	public static inline var CPP_PRIM_PREFIX:String = "CPP_PRIMITIVE_PREFIX";
+
+
+	static var VOID = TPath({name:"Void", pack:[], params:[] });
+	static var DYNAMIC = TPath({name:"Dynamic", pack:[], params:[], sub:null});
 
 	public static function build():Array<Field>
 	{
 		var fields:Array<Field> = Context.getBuildFields( );
-		var localClass:ClassType = Context.getLocalClass( ).get();
+		
 		if (!Context.defined("openfl"))
 			return fields;
+
+		var localClass:ClassType = Context.getLocalClass( ).get();
+		var config = parseConfig(localClass);
 
 		var result:Field;
 		for (field in fields.copy())
@@ -53,15 +62,30 @@ class MacroMirrors
 		return fields;
 	}
 
+	static function parseConfig(localClass:ClassType):ContextConfig
+	{
+		var config:ContextConfig = {};
+		var metas:Metadata = localClass.meta.get();
+		if(MetaDataTools.has(metas, CPP_DEFAULT_LIB))
+			config.cppDefaultLibrary = MetaDataTools.get(metas, 
+				CPP_DEFAULT_LIB).params[0].toString();
+
+		if(MetaDataTools.has(metas, CPP_PRIM_PREFIX))
+			config.cppPrimitivePrefix = MetaDataTools.get(metas, 
+				CPP_PRIM_PREFIX).params[0].toString();
+
+		return config;
+	}
+
 	static function parseField(field:Field, localClass:ClassType):Field
 	{
 		var result:Field;
 		var meta:MetadataEntry;
 		var metaLength:Int;
 
-		if(MetaDataTools.has(field, CPP_META) && Context.defined("cpp"))
+		if(MetaDataTools.has(field.meta, CPP_META) && Context.defined("cpp"))
 		{
-			meta = MetaDataTools.get(field, CPP_META);
+			meta = MetaDataTools.get(field.meta, CPP_META);
 			metaLength = meta.params.length;
 			checkMetaArgsCount(meta, 2, 2);
 
@@ -70,9 +94,9 @@ class MacroMirrors
 				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
 			);	
 		}
-		else if(MetaDataTools.has(field, JNI_META) && Context.defined("android"))
+		else if(MetaDataTools.has(field.meta, JNI_META) && Context.defined("android"))
 		{
-			meta = MetaDataTools.get(field, JNI_META);
+			meta = MetaDataTools.get(field.meta, JNI_META);
 			metaLength = meta.params.length;
 			checkMetaArgsCount(meta, 0, 2);
 
@@ -81,9 +105,9 @@ class MacroMirrors
 				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
 			);	
 		}
-		else if(MetaDataTools.has(field, IOS_META) && Context.defined("ios"))
+		else if(MetaDataTools.has(field.meta, IOS_META) && Context.defined("ios"))
 		{
-			meta = MetaDataTools.get(field, IOS_META);
+			meta = MetaDataTools.get(field.meta, IOS_META);
 			metaLength = meta.params.length;
 			checkMetaArgsCount(meta, 2, 2);
 
@@ -112,20 +136,19 @@ class MacroMirrors
 		
 		var result:Function = FieldTool.getFunction(field);
 		if (result.ret == null)
-			result.ret = TPath({name:"Void", pack:[], params:[] });
+			result.ret = VOID;
 		
 		var argumentNames:Array<Expr> = getArgsNames(result);
 		var signature = JniTools.getSignature(field);
 
 		if (!isStaticField(field))
-			result.args[ 0 ].type = TPath({name:"Dynamic", pack:[], 
-				params:[], sub:null});
+			result.args[ 0 ].type = DYNAMIC;
 
 		#if verbose_mirrors
 		Sys.println('[JNI] $packageName::$variableName $signature');
 		#end
 
-		var mirrorName:String = "mirror_jni_"+variableName;
+		var mirrorName:String = getMirrorName(variableName, "jni");
 		var resultVariable = createVariable(mirrorName, result, field.pos);
 		var returnType:String = result.ret.getParameters( )[0].name;
 		var returnExpr = null;
@@ -134,7 +157,7 @@ class MacroMirrors
 		if(returnType != "Void")
 		{
 			//Switching the return type to dynamic
-			result.ret = TPath({name:"Dynamic", pack:[], params:[], sub:null}); 
+			result.ret = DYNAMIC; 
 
 			returnExpr = macro
 			{
@@ -154,7 +177,8 @@ class MacroMirrors
 			{
 				#if verbose_mirrors
 				trace("Lib not loaded, loading it");
-				trace($v{packageName} + " :: " + $v{mirrorName} + ' :: signature '+$v{signature});
+				trace($v{packageName} + " :: " + $v{mirrorName} 
+					+ ' :: signature '+$v{signature});
 				#end
 
 				if ($v{isStaticMethod})
@@ -171,6 +195,11 @@ class MacroMirrors
 		return resultVariable;
 	}
 
+	static function getMirrorName(name:String, target:String = "cpp"):String
+	{
+		return 'mirror_' + target + '_' + name;
+	}
+
 	static function cpp(field:Field, packageName:String, ?name:String ) : Field
 	{
 
@@ -183,7 +212,7 @@ class MacroMirrors
 		Sys.println('[CPP] $packageName::'+field.name+'($argsCount)');
 		#end
 
-		var mirrorName : String = "mirror_cpp_"+name;
+		var mirrorName : String = getMirrorName(name, "cpp");
 		var fieldVariable = createVariable(mirrorName, func, field.pos);
 		var returnExpr = macro "";
 
@@ -210,7 +239,8 @@ class MacroMirrors
 		return fieldVariable;
 	}
 
-	static function createVariable(variableName:String, refFunction:Function, positon:Position):Field
+	static function createVariable(variableName:String, refFunction:Function, 
+		positon:Position):Field
 	{
 		var types = [for (arg in refFunction.args) arg.type];
 		var fieldType : FieldType = FVar(TFunction(types, refFunction.ret));
@@ -228,19 +258,16 @@ class MacroMirrors
 
 	static function getString(e:Expr):String
 	{
-
 		if ( e == null )
 			return null;
 
 		return switch( e.expr.getParameters( )[ 0 ] )
 		{
-
 			case CString( s ):
 				s;
 
 			default:
 				null;
-
 		}
 	}
 
@@ -392,11 +419,11 @@ class FieldTool
 class MetaDataTools
 {
 
-	public static function has(field:Field, metaName:String):Bool
+	public static function has(metas:Metadata, metaName:String):Bool
 	{
 		var result = false;
 
-		for(meta in field.meta)
+		for(meta in metas)
 		{
 			if (meta.name == metaName)
 			{
@@ -408,10 +435,10 @@ class MetaDataTools
 		return result;
 	}
 
-	public static function get(field:Field, metaName:String):MetadataEntry
+	public static function get(metas:Metadata, metaName:String):MetadataEntry
 	{
 		var result:MetadataEntry = null;
-		for(meta in field.meta)
+		for(meta in metas)
 		{
 			if (meta.name == metaName)
 			{
@@ -422,5 +449,10 @@ class MetaDataTools
 
 		return result;
 	}
+}
 
+typedef ContextConfig=
+{
+	@:optional var cppPrimitivePrefix:String;
+	@:optional var cppDefaultLibrary:String;
 }
