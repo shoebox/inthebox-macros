@@ -51,7 +51,7 @@ class MacroMirrors
 		var result:Field;
 		for (field in fields.copy())
 		{
-			result = parseField(field, localClass);
+			result = parseField(field, localClass, config);
 			if(result != null)
 			{
 				fields.push(result);
@@ -67,32 +67,61 @@ class MacroMirrors
 		var config:ContextConfig = {};
 		var metas:Metadata = localClass.meta.get();
 		if(MetaDataTools.has(metas, CPP_DEFAULT_LIB))
-			config.cppDefaultLibrary = MetaDataTools.get(metas, 
-				CPP_DEFAULT_LIB).params[0].toString();
+			config.cppDefaultLibrary = getString( MetaDataTools.get(metas, 
+				CPP_DEFAULT_LIB).params[0]);
 
 		if(MetaDataTools.has(metas, CPP_PRIM_PREFIX))
-			config.cppPrimitivePrefix = MetaDataTools.get(metas, 
-				CPP_PRIM_PREFIX).params[0].toString();
+			config.cppPrimitivePrefix = getString( MetaDataTools.get(metas, 
+				CPP_PRIM_PREFIX).params[0]);
 
 		return config;
 	}
 
-	static function parseField(field:Field, localClass:ClassType):Field
+	static function getLibraryName(field:Field, meta:MetadataEntry, metaLength:Int, 
+		config:ContextConfig):String
+	{
+		var result:String;
+
+		if(metaLength == 0 && config.cppDefaultLibrary == null)
+			Context.error('The primitive name is not defined, and not ' 
+				+ ' for field ${field.name}', field.pos);
+
+		if(config.cppDefaultLibrary != null && metaLength == 0)
+			result = config.cppDefaultLibrary;
+		else
+			result = getString(meta.params[0]);
+
+		return result;
+	}
+
+	static function getPrimitiveName(field:Field, meta:MetadataEntry, metaLength:Int, 
+		config:ContextConfig):String
+	{
+		if(metaLength == 2)
+			return meta.params[1].toString();
+
+		return (config.cppPrimitivePrefix != null ? 
+			config.cppPrimitivePrefix + "_"  : "")  + field.name;
+	}
+
+	static function parseField(field:Field, localClass:ClassType, 
+		config:ContextConfig):Field
 	{
 		var result:Field;
 		var meta:MetadataEntry;
 		var metaLength:Int;
+		var libraryName:String;
+		var primiveName:String;
 
 		if(MetaDataTools.has(field.meta, CPP_META) && Context.defined("cpp"))
 		{
 			meta = MetaDataTools.get(field.meta, CPP_META);
 			metaLength = meta.params.length;
-			checkMetaArgsCount(meta, 2, 2);
 
-			result = cpp(field,
-				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.name,
-				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
-			);	
+			libraryName = getLibraryName(field, meta, metaLength, config);
+			primiveName = getPrimitiveName(field, meta, metaLength, config);
+			
+			result = cpp(field, libraryName, primiveName, "CPP");	
 		}
 		else if(MetaDataTools.has(field.meta, JNI_META) && Context.defined("android"))
 		{
@@ -109,12 +138,10 @@ class MacroMirrors
 		{
 			meta = MetaDataTools.get(field.meta, IOS_META);
 			metaLength = meta.params.length;
-			checkMetaArgsCount(meta, 2, 2);
 
-			result = cpp(field,
-				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
-				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
-			);	
+			libraryName = getLibraryName(field, meta, metaLength, config);
+			primiveName = getPrimitiveName(field, meta, metaLength, config);
+			result = cpp(field, libraryName, primiveName, "IOS");	
 		}
 
 		return result;
@@ -200,21 +227,21 @@ class MacroMirrors
 		return 'mirror_' + target + '_' + name;
 	}
 
-	static function cpp(field:Field, packageName:String, ?name:String ) : Field
+	static function cpp(field:Field, packageName:String, ?name:String, 
+		?type:String ) : Field
 	{
-
 		var func:Function = getFunc(field);
 
 		var argsCount:Int = func.args.length;
 		var argumentNames:Array<Expr> = getArgsNames(func);
 		
-		#if verbose_mirrors
-		Sys.println('[CPP] $packageName::'+field.name+'($argsCount)');
-		#end
-
 		var mirrorName : String = getMirrorName(name, "cpp");
 		var fieldVariable = createVariable(mirrorName, func, field.pos);
 		var returnExpr = macro "";
+
+		#if verbose_mirrors
+		Sys.println('[$type] $packageName::$name ($argsCount)');
+		#end
 
 		if (func.ret.getParameters( )[ 0 ].name == "Void")
 			returnExpr = macro $i{mirrorName}($a{argumentNames});
