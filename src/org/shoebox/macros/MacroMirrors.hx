@@ -31,9 +31,9 @@ class MacroMirrors
 	public static inline var CPP_META:String = "CPP";
 	public static inline var IOS_META:String = "IOS";
 	public static inline var JNI_META:String = "JNI";
-	public static inline var CPP_DEFAULT_LIB:String = "CPP_DEFAULT_LIBRARY";
-	public static inline var CPP_PRIM_PREFIX:String = "CPP_PRIMITIVE_PREFIX";
 
+	public static inline var TAG_CPP_DEFAULT_LIB:String = "CPP_DEFAULT_LIBRARY";
+	public static inline var TAG_CPP_PRIM_PREFIX:String = "CPP_PRIMITIVE_PREFIX";
 
 	static var VOID = TPath({name:"Void", pack:[], params:[] });
 	static var DYNAMIC = TPath({name:"Dynamic", pack:[], params:[], sub:null});
@@ -66,13 +66,13 @@ class MacroMirrors
 	{
 		var config:ContextConfig = {};
 		var metas:Metadata = localClass.meta.get();
-		if(MetaDataTools.has(metas, CPP_DEFAULT_LIB))
-			config.cppDefaultLibrary = getString( MetaDataTools.get(metas, 
-				CPP_DEFAULT_LIB).params[0]);
+		if(MetaDataTools.has(metas, TAG_CPP_DEFAULT_LIB))
+			config.cppDefaultLibrary = getString(MetaDataTools.get(metas, 
+				TAG_CPP_DEFAULT_LIB).params[0]);
 
-		if(MetaDataTools.has(metas, CPP_PRIM_PREFIX))
-			config.cppPrimitivePrefix = getString( MetaDataTools.get(metas, 
-				CPP_PRIM_PREFIX).params[0]);
+		if(MetaDataTools.has(metas, TAG_CPP_PRIM_PREFIX))
+			config.cppPrimitivePrefix = getString(MetaDataTools.get(metas, 
+				TAG_CPP_PRIM_PREFIX).params[0]);
 
 		return config;
 	}
@@ -188,11 +188,11 @@ class MacroMirrors
 
 			returnExpr = macro
 			{
-				var args : Array<Dynamic> = $a{ argumentNames };
+				var args:Array<Dynamic> = $a{ argumentNames};
 				#if verbose_mirrors
 				trace( "call with args ::: "+args);
 				#end
-				return $i{mirrorName}( $a{argumentNames} );
+				return $i{mirrorName}($a{argumentNames});
 			};
 		}
 		else
@@ -424,10 +424,8 @@ class FieldTool
 			default:
 				Context.error("Only function are supported", field.pos);
 		}
-
 		return result;
 	}
-
 }
 
 class MetaDataTools
@@ -436,7 +434,6 @@ class MetaDataTools
 	public static function has(metas:Metadata, metaName:String):Bool
 	{
 		var result = false;
-
 		for(meta in metas)
 		{
 			if (meta.name == metaName)
@@ -445,7 +442,6 @@ class MetaDataTools
 				break;
 			}
 		}
-
 		return result;
 	}
 
@@ -460,7 +456,6 @@ class MetaDataTools
 				break;
 			}
 		}
-
 		return result;
 	}
 }
