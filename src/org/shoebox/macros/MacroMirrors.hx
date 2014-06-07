@@ -98,7 +98,7 @@ class MacroMirrors
 		config:ContextConfig):String
 	{
 		if(metaLength == 2)
-			return meta.params[1].toString();
+			return getString(meta.params[1]);
 
 		return (config.cppPrimitivePrefix != null ? 
 			config.cppPrimitivePrefix + "_"  : "")  + field.name;
@@ -230,7 +230,7 @@ class MacroMirrors
 	static function cpp(field:Field, packageName:String, ?name:String, 
 		?type:String ) : Field
 	{
-		var func:Function = getFunc(field);
+		var func:Function = FieldTool.getFunction(field);
 
 		var argsCount:Int = func.args.length;
 		var argumentNames:Array<Expr> = getArgsNames(func);
@@ -295,19 +295,6 @@ class MacroMirrors
 
 			default:
 				null;
-		}
-	}
-
-	static function getFunc(f:Field):Function
-	{
-		return switch(f.kind)
-		{
-
-			case FFun(f):
-				f;
-
-			default:
-				Context.error("Only function are supported",f.pos);
 		}
 	}
 
