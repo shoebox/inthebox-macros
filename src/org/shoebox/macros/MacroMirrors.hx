@@ -28,6 +28,8 @@ using haxe.macro.Tools;
  */
 class MacroMirrors
 {
+	#if macro
+
 	public static inline var CPP_META:String = "CPP";
 	public static inline var IOS_META:String = "IOS";
 	public static inline var JNI_META:String = "JNI";
@@ -52,7 +54,7 @@ class MacroMirrors
 		for (field in fields.copy())
 		{
 			result = parseField(field, localClass, config);
-			if(result != null)
+			if (result != null)
 			{
 				fields.push(result);
 				result = null;
@@ -66,11 +68,11 @@ class MacroMirrors
 	{
 		var config:ContextConfig = {};
 		var metas:Metadata = localClass.meta.get();
-		if(MetaDataTools.has(metas, TAG_CPP_DEFAULT_LIB))
+		if (MetaDataTools.has(metas, TAG_CPP_DEFAULT_LIB))
 			config.cppDefaultLibrary = getString(MetaDataTools.get(metas, 
 				TAG_CPP_DEFAULT_LIB).params[0]);
 
-		if(MetaDataTools.has(metas, TAG_CPP_PRIM_PREFIX))
+		if (MetaDataTools.has(metas, TAG_CPP_PRIM_PREFIX))
 			config.cppPrimitivePrefix = getString(MetaDataTools.get(metas, 
 				TAG_CPP_PRIM_PREFIX).params[0]);
 
@@ -82,11 +84,11 @@ class MacroMirrors
 	{
 		var result:String;
 
-		if(metaLength == 0 && config.cppDefaultLibrary == null)
+		if (metaLength == 0 && config.cppDefaultLibrary == null)
 			Context.error('The primitive name is not defined for field' +  
 				'${field.name} and no CPP_DEFAULT_LIBRARY setup', field.pos);
 
-		if(config.cppDefaultLibrary != null && metaLength == 0)
+		if (config.cppDefaultLibrary != null && metaLength == 0)
 			result = config.cppDefaultLibrary;
 		else
 			result = getString(meta.params[0]);
@@ -97,7 +99,7 @@ class MacroMirrors
 	static function getPrimitiveName(field:Field, meta:MetadataEntry, metaLength:Int, 
 		config:ContextConfig):String
 	{
-		if(metaLength == 2)
+		if (metaLength == 2)
 			return getString(meta.params[1]);
 
 		return (config.cppPrimitivePrefix != null ? 
@@ -113,7 +115,7 @@ class MacroMirrors
 		var libraryName:String;
 		var primiveName:String;
 
-		if(MetaDataTools.has(field.meta, CPP_META) && Context.defined("cpp"))
+		if (MetaDataTools.has(field.meta, CPP_META) && Context.defined("cpp"))
 		{
 			meta = MetaDataTools.get(field.meta, CPP_META);
 			metaLength = meta.params.length;
@@ -123,18 +125,17 @@ class MacroMirrors
 			
 			result = cpp(field, libraryName, primiveName, "CPP");	
 		}
-		else if(MetaDataTools.has(field.meta, JNI_META) && Context.defined("android"))
+		else if (MetaDataTools.has(field.meta, JNI_META) && Context.defined("android"))
 		{
 			meta = MetaDataTools.get(field.meta, JNI_META);
 			metaLength = meta.params.length;
-			checkMetaArgsCount(meta, 0, 2);
-
+			
 			result = jni(field,
-				(metaLength > 0) ? getString(meta.params[ 0 ]) : localClass.module,
-				(metaLength > 1) ? getString(meta.params[ 1 ]) : field.name
+				(metaLength > 0) ? getString(meta.params[0]) : localClass.module,
+				(metaLength > 1) ? getString(meta.params[1]) : field.name
 			);	
 		}
-		else if(MetaDataTools.has(field.meta, IOS_META) && Context.defined("ios"))
+		else if (MetaDataTools.has(field.meta, IOS_META) && Context.defined("ios"))
 		{
 			meta = MetaDataTools.get(field.meta, IOS_META);
 			metaLength = meta.params.length;
@@ -145,15 +146,6 @@ class MacroMirrors
 		}
 
 		return result;
-	}
-
-	static function checkMetaArgsCount(meta:MetadataEntry, min:Int, max:Int):Void
-	{
-		var metaName = meta.name;
-		var count = meta.params.length;
-		if (count > max || count < min)
-			Context.error('Invalid arguments count for the meta $metaName', 
-				meta.pos);
 	}
 
 	static function jni(field:Field, packageName:String, 
@@ -169,10 +161,10 @@ class MacroMirrors
 		var signature = JniTools.getSignature(field);
 
 		if (!isStaticField(field))
-			result.args[ 0 ].type = DYNAMIC;
+			result.args[0].type = DYNAMIC;
 
 		#if verbose_mirrors
-		Sys.println('[JNI] $packageName::$variableName $signature');
+		Sys.println('[JNI] $packageName \t $variableName $signature');
 		#end
 
 		var mirrorName:String = getMirrorName(variableName, "jni");
@@ -181,16 +173,16 @@ class MacroMirrors
 		var returnExpr = null;
 		var isStaticMethod = isStaticField(field);
 
-		if(returnType != "Void")
+		if (returnType != "Void")
 		{
 			//Switching the return type to dynamic
 			result.ret = DYNAMIC; 
 
 			returnExpr = macro
 			{
-				var args:Array<Dynamic> = $a{ argumentNames};
 				#if verbose_mirrors
-				trace( "call with args ::: "+args);
+				var args:Array<Dynamic> = $a{argumentNames};
+				trace( "call with args ::: " + args);
 				#end
 				return $i{mirrorName}($a{argumentNames});
 			};
@@ -235,12 +227,12 @@ class MacroMirrors
 		var argsCount:Int = func.args.length;
 		var argumentNames:Array<Expr> = getArgsNames(func);
 		
-		var mirrorName : String = getMirrorName(name, "cpp");
+		var mirrorName:String = getMirrorName(name, "cpp");
 		var fieldVariable = createVariable(mirrorName, func, field.pos);
 		var returnExpr = macro "";
 
 		#if verbose_mirrors
-		Sys.println('[$type] $packageName::$name ($argsCount)');
+		Sys.println('[$type] $packageName \t $name ($argsCount)');
 		#end
 
 		if (func.ret.getParameters( )[ 0 ].name == "Void")
@@ -285,12 +277,12 @@ class MacroMirrors
 
 	static function getString(e:Expr):String
 	{
-		if ( e == null )
+		if (e == null)
 			return null;
 
-		return switch( e.expr.getParameters( )[ 0 ] )
+		return switch ( e.expr.getParameters( )[ 0 ] )
 		{
-			case CString( s ):
+			case CString(s):
 				s;
 
 			default:
@@ -335,7 +327,7 @@ class JniTools
 
 	public static function translateType(argType:Null<Type>, pos:Position):String
 	{
-		return switch(argType)
+		return switch (argType)
 		{
 			case TAbstract(cf, a ):
 				translateAbstractType(cf.get(), pos);
@@ -353,7 +345,7 @@ class JniTools
 
 	public static function translateArgType(type:Null<Type>, pos:Position):String
 	{
-		return switch(type)
+		return switch (type)
 		{
 			case TInst(t, params):
 				translateSubArgType(type, params, pos);
@@ -368,7 +360,7 @@ class JniTools
 		pos:Position):String
 	{
 		var result:String;
-		switch(type.getParameters()[0].get().name)
+		switch (type.getParameters()[0].get().name)
 		{
 			case "String":
 				result = "Ljava/lang/String;";
@@ -389,7 +381,7 @@ class JniTools
 	public static function translateAbstractType(a:AbstractType, pos:Position):String
 	{
 		var result:String = null;
-		result = switch(a.name)
+		result = switch (a.name)
 		{
 			case "Float":
 				"F";
@@ -416,7 +408,7 @@ class FieldTool
 	public static function getFunction(field:Field):Function
 	{
 		var result:Function;
-		switch(field.kind)
+		switch (field.kind)
 		{
 			case FFun(f):
 				result = f;
@@ -458,6 +450,8 @@ class MetaDataTools
 		}
 		return result;
 	}
+
+	#end
 }
 
 typedef ContextConfig=
