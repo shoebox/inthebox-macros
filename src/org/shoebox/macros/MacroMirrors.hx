@@ -83,8 +83,8 @@ class MacroMirrors
 		var result:String;
 
 		if(metaLength == 0 && config.cppDefaultLibrary == null)
-			Context.error('The primitive name is not defined, and not ' 
-				+ ' for field ${field.name}', field.pos);
+			Context.error('The primitive name is not defined for field' +  
+				'${field.name} and no CPP_DEFAULT_LIBRARY setup', field.pos);
 
 		if(config.cppDefaultLibrary != null && metaLength == 0)
 			result = config.cppDefaultLibrary;
