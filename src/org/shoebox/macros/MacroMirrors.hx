@@ -231,6 +231,7 @@ class MacroMirrors
 		var fieldVariable = createVariable(mirrorName, func, field.pos);
 		var returnExpr = macro "";
 
+		
 		#if verbose_mirrors
 		Sys.println('[$type] $packageName \t $name ($argsCount)');
 		#end
