@@ -26,412 +26,437 @@ using haxe.macro.Tools;
  * ...
  * @author shoe[box]
  */
-class MacroMirrors{
+class MacroMirrors
+{
+	#if macro
 
-	// -------o constructor
+	public static inline var CPP_META:String = "CPP";
+	public static inline var IOS_META:String = "IOS";
+	public static inline var JNI_META:String = "JNI";
 
-		/**
-		* constructor
-		*
-		* @param
-		* @return	void
-		*/
-		private function new() {
+	public static inline var TAG_CPP_DEFAULT_LIB:String = "CPP_DEFAULT_LIBRARY";
+	public static inline var TAG_CPP_PRIM_PREFIX:String = "CPP_PRIMITIVE_PREFIX";
 
+	static var VOID = TPath({name:"Void", pack:[], params:[] });
+	static var DYNAMIC = TPath({name:"Dynamic", pack:[], params:[], sub:null});
+
+	public static function build():Array<Field>
+	{
+		var fields:Array<Field> = Context.getBuildFields( );
+		
+		if (!Context.defined("openfl"))
+			return fields;
+
+		var localClass:ClassType = Context.getLocalClass( ).get();
+		var config = parseConfig(localClass);
+
+		var result:Field;
+		for (field in fields.copy())
+		{
+			result = parseField(field, localClass, config);
+			if (result != null)
+			{
+				fields.push(result);
+				result = null;
+			}
 		}
 
-	// -------o public
+		return fields;
+	}
 
-		#if macro
+	static function parseConfig(localClass:ClassType):ContextConfig
+	{
+		var config:ContextConfig = {};
+		var metas:Metadata = localClass.meta.get();
+		if (MetaDataTools.has(metas, TAG_CPP_DEFAULT_LIB))
+			config.cppDefaultLibrary = getString(MetaDataTools.get(metas, 
+				TAG_CPP_DEFAULT_LIB).params[0]);
 
-		/**
-		*
-		*
-		* @public
-		* @return	void
-		*/
-		static public function build( ) : Array<Field>{
+		if (MetaDataTools.has(metas, TAG_CPP_PRIM_PREFIX))
+			config.cppPrimitivePrefix = getString(MetaDataTools.get(metas, 
+				TAG_CPP_PRIM_PREFIX).params[0]);
+
+		return config;
+	}
+
+	static function getLibraryName(field:Field, meta:MetadataEntry, metaLength:Int, 
+		config:ContextConfig):String
+	{
+		var result:String;
+
+		if (metaLength == 0 && config.cppDefaultLibrary == null)
+			Context.error('The primitive name is not defined for field' +  
+				'${field.name} and no CPP_DEFAULT_LIBRARY setup', field.pos);
+
+		if (config.cppDefaultLibrary != null && metaLength == 0)
+			result = config.cppDefaultLibrary;
+		else
+			result = getString(meta.params[0]);
+
+		return result;
+	}
+
+	static function getPrimitiveName(field:Field, meta:MetadataEntry, metaLength:Int, 
+		config:ContextConfig):String
+	{
+		if (metaLength == 2)
+			return getString(meta.params[1]);
+
+		return (config.cppPrimitivePrefix != null ? 
+			config.cppPrimitivePrefix + "_"  : "")  + field.name;
+	}
+
+	static function parseField(field:Field, localClass:ClassType, 
+		config:ContextConfig):Field
+	{
+		var result:Field;
+		var meta:MetadataEntry;
+		var metaLength:Int;
+		var libraryName:String;
+		var primiveName:String;
+
+		if (MetaDataTools.has(field.meta, CPP_META) && Context.defined("cpp"))
+		{
+			meta = MetaDataTools.get(field.meta, CPP_META);
+			metaLength = meta.params.length;
+
+			libraryName = getLibraryName(field, meta, metaLength, config);
+			primiveName = getPrimitiveName(field, meta, metaLength, config);
 			
-			//Fields
-				var aFields : Array<Field> = Context.getBuildFields( );
-				var oClass : Null<Ref<ClassType>> = Context.getLocalClass( );
-
-			//OpenFL only
-				if(!Context.defined("openfl"))
-					return aFields;
-
-			//
-				var sClass_name : String = oClass.get( ).name;
-
-			//
-				var aMetas : Array<MetadataEntry>;
-				var bCPP	: Bool;
-				var bJNI	: Bool;
-				for( field in aFields.copy( ) ){
-
-					//
-						aMetas = [ for( m in field.meta ) if( m.name == "CPP" || m.name == "JNI" || m.name == "IOS" ) m ];
-
-					//
-						if( aMetas.length == 0 )
-							continue;
-
-					//
-						for(m in aMetas)
-						{
-							if(m.name == "CPP" && Context.defined("cpp"))
-							{
-								aFields.push( _cpp(
-									field ,
-									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : sClass_name,
-									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
-								) );
-							}
-							else if( m.name == "JNI" && Context.defined("android"))
-							{
-								aFields.push( _jni(
-									field ,
-									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : oClass.get( ).module,
-									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
-								) );
-							}
-							else if( m.name == "IOS" && Context.defined("ios"))
-							{
-								aFields.push( _cpp(
-									field ,
-									( m.params.length > 0 ) ? _getString( m.params[ 0 ] ) : oClass.get( ).module,
-									( m.params.length > 1 ) ? _getString( m.params[ 1 ] ) : field.name
-								) );
-							}
-
-						}
-
-
-				}
-
-			return aFields;
+			result = cpp(field, libraryName, primiveName, "CPP");	
 		}
-
-	// -------o protected
-
-		/**
-		* Making the JNI mirror
-		*
-		* @private
-		* @param 	oField 		: the targetted field 	( Field )
-		* @param 	sPackage 	: the package name 		( String )
-		* @param 	sPackage 	: the function name 	( String )
-		* @return	the new instance field ( Field )
-		*/
-		static private function _jni( oField : Field , sPackage : String , ?sName : String ) : Field{
+		else if (MetaDataTools.has(field.meta, JNI_META) && Context.defined("android"))
+		{
+			meta = MetaDataTools.get(field.meta, JNI_META);
+			metaLength = meta.params.length;
 			
-			sPackage = sPackage.split(".").join("/");
-			
-			//The function
-				var f : Function = _getFunc( oField );
-				if(f.ret == null)
-					f.ret = TPath({ name : "Void", pack : [], params : [] });
-				
-				var bStatic = Lambda.has( oField.access , AStatic );
+			result = jni(field,
+				(metaLength > 0) ? getString(meta.params[0]) : localClass.module,
+				(metaLength > 1) ? getString(meta.params[1]) : field.name
+			);	
+		}
+		else if (MetaDataTools.has(field.meta, IOS_META) && Context.defined("ios"))
+		{
+			meta = MetaDataTools.get(field.meta, IOS_META);
+			metaLength = meta.params.length;
 
-			//Arguments
-				var iArgs : Int = f.args.length;
-				var aNames : Array<Expr> = [ for( a in f.args ) macro $i{ a.name } ];
-
-			//JNI Arguments translation
-				var ct : Null<ComplexType>;
-				var tp : Null<Type>;
-				var sJNI : String = "(";
-				var i = 0;
-				for( arg in f.args ){
-
-					//For non static member the first argument is not include in the JNI definition
-					if( i++ == 0 && !bStatic )
-						continue;
-
-					ct = arg.type;
-					tp = ComplexTypeTools.toType( ct );
-					sJNI += _translateType( tp );
-				}
-				sJNI += ")";
-
-			//For non static we convert the first argument type to dynamic
-				if( !bStatic ){
-					f.args[ 0 ].type = TPath({ name : "Dynamic" , pack : [], params : [], sub : null });
-				}
-
-			//Return Type
-				if(f.ret==null)
-					sJNI += "V";
-				else
-					sJNI += _translateType( ComplexTypeTools.toType( f.ret ) );
-
-			//Verbose
-				#if verbose_mirrors
-				trace( '[MIRROR] - JNI $sPackage::$sName $sJNI' );
-				#end
-
-			//Variable
-				var sVar_name : String = "mirror_jni_"+sName;
-				var fVar = _createVariable( sVar_name , f );
-
-			//Return response
-				if( f.ret.getParameters( )[0].name != "Void")
-					f.ret = TPath({ name : "Dynamic" , pack : [], params : [], sub : null }); //Switching the return type to dynamic
-
-				var eRet = null;
-				if( f.ret.getParameters( )[ 0 ].name == "Void" ){
-					eRet = macro $i{sVar_name}( $a{aNames} );
-				}else{
-					eRet = macro{
-						var args : Array<Dynamic> = $a{ aNames };
-						#if verbose_mirrors
-						trace( "call with args ::: "+args);
-						#end
-						return $i{sVar_name}( $a{aNames} );
-					};
-				}
-
-			//Result
-
-				f.expr = macro{
-
-					//Already loaded ?
-						if( $i{ sVar_name } == null ){
-							#if verbose_mirrors
-								trace("Lib not loaded, loading it");
-								trace( $v{ sPackage }+"::"+$v{ sName }+' :: signature '+$v{ sJNI } );
-							#end
-
-							//
-								if( $v{ bStatic } )
-									$i{ sVar_name } = openfl.utils.JNI.createStaticMethod(
-										$v{sPackage},
-										$v{sName},
-										$v{sJNI}
-									);
-								else
-									$i{ sVar_name } = openfl.utils.JNI.createMemberMethod(
-										$v{sPackage},
-										$v{sName},
-										$v{sJNI}
-									);
-
-
-						}
-
-					//Making the call
-						$eRet;
-				}
-
-
-			return fVar;
+			libraryName = getLibraryName(field, meta, metaLength, config);
+			primiveName = getPrimitiveName(field, meta, metaLength, config);
+			result = cpp(field, libraryName, primiveName, "IOS");	
 		}
 
-		/**
-		* JNI translation of the type
-		*
-		* @private
-		* @param 	tp : The type to be translated 	( Null<Type> )
-		* @return	JNI translation of the Type 	( String )
-		*/
-		static private function _translateType( tp : Null<Type> ) : String{
+		return result;
+	}
 
-			var c : ClassType;
-			return switch( tp ){
+	static function jni(field:Field, packageName:String, 
+		?variableName:String ):Field
+	{
+		packageName = packageName.split(".").join("/");
+		
+		var result:Function = FieldTool.getFunction(field);
+		if (result.ret == null)
+			result.ret = VOID;
+		
+		var argumentNames:Array<Expr> = getArgsNames(result);
+		var signature = JniTools.getSignature(field);
 
-				case TAbstract( cf , a ):
-					_jniAbstract_type( cf.get( ) );
+		if (!isStaticField(field))
+			result.args[0].type = DYNAMIC;
 
-				case TDynamic( t ):
-					"Lorg/haxe/nme/HaxeObject;";
-
-				default:
-					c = tp.getParameters( )[ 0 ].get( );
-					switch( c.name ){
-
-						case "String":
-							"Ljava/lang/String;";
-
-						case "Array":
-							"["+_translateType( tp.getParameters( )[ 1 ][0] );
-
-						default:
-							"L"+c.pack.join("/")+( c.pack.length == 0 ? "" : "/" ) + c.name+";";
-
-					}
-
-
-
-			}
-		}
-
-		/**
-		*
-		*
-		* @private
-		* @return	void
-		*/
-		static private function _jniAbstract_type( cf : AbstractType ) : String{
-
-			return switch( cf.name ){
-
-				case "Float":
-					"F";
-
-				case "Bool":
-					"Z";
-
-				case "Int":
-					"I";
-
-				case "Void":
-					"V";
-
-				default:
-					Context.error("Unknow abstract type ::: "+cf.name , Context.currentPos( ) );
-
-			}
-
-			return null;
-			//return cf.get( ).name;
-		}
-
-		/**
-		* Making the CPP mirror
-		*
-		* @private
-		* @param 	oField 		: the targetted field 	( Field )
-		* @param 	sPackage 	: the package name 		( String )
-		* @param 	sPackage 	: the function name 	( String )
-		* @return	the new instance field ( Field )
-		*/
-		static private function _cpp( oField : Field , sPackage : String , ?sName : String ) : Field{
-
-			//The function
-				var f : Function = _getFunc( oField );
-
-			//Arguments
-				var iArgs : Int = f.args.length;
-				var aNames : Array<Expr> = [ for( a in f.args ) macro $i{ a.name } ];
-
-			//Verbose
-				#if verbose_mirrors
-				trace( '[MIRROR] - CPP $sPackage::'+oField.name+'($iArgs)' );
-				#end
-
-			//Variable
-				var sVar_name : String = "mirror_cpp_"+sName;
-				var fVar = _createVariable( sVar_name , f );
-
-			//Return response
-
-				var eRet = macro "";
-				if( f.ret.getParameters( )[ 0 ].name == "Void" )
-					eRet = macro $i{sVar_name}( $a{aNames} );
-				else
-					eRet = macro return $i{sVar_name}( $a{aNames} );
-
-			//Result
-				f.expr = macro{
-
-					//Already loaded ?
-						if( $i{ sVar_name } == null ){
-							#if verbose_mirrors
-								trace("Lib not loaded, loading it");
-								trace( $v{ sPackage }+"::"+$v{ sName }+'($iArgs)' );
-							#end
-
-							//
-								$i{ sVar_name } = cpp.Lib.load( $v{ sPackage } , $v{ sName } , $v{ iArgs });
-
-						}
-
-					$eRet;
-				}
-
-
-			return fVar;
-		}
-
-		/**
-		* Create the variable who will contains the instance of mirrored method
-		*
-		* @private
-		* @return	void
-		*/
-		static private function _createVariable( sName : String , f : Function ) : Field{
-
-
-			//Variable type
-				var aTypes : Array<Null<ComplexType>> = [ for( a in f.args ) a.type ];
-
-			//
-				var k : FieldType = FVar(TFunction(aTypes , f.ret));
-						/*
-				return {
-							name : sName ,
-							doc : null,
-							meta : [],
-							access : [APublic,AStatic],
-							kind : FVar(TPath({ pack : [], name : "Dynamic", params : [], sub : null }),null),
-							pos : Context.currentPos()
-						};
-			*/
-			//
-				return {
-					name	: sName ,
-					doc		: null,
-					meta	: [],
-					access	: [APrivate,AStatic],
-					kind	: k ,
-					pos		: haxe.macro.Context.currentPos()
-				};
-		}
-
-		/**
-		*
-		*
-		* @private
-		* @return	void
-		*/
-		static private function _getString(  e : Expr ) : String{
-
-			if( e == null )
-				return null;
-
-			return switch( e.expr.getParameters( )[ 0 ] ){
-
-				case CString( s ):
-					s;
-
-				default:
-					null;
-
-			}
-
-		}
-
-		/**
-		* Get the field function
-		*
-		* @private
-		* @return	void
-		*/
-		static private function _getFunc( f : Field ) : Function{
-			return switch( f.kind ){
-
-				case FFun( f ):
-					f;
-
-				default:
-					Context.error("Only function are supported",f.pos);
-
-			}
-		}
-
+		#if verbose_mirrors
+		Sys.println('[JNI] $packageName \t $variableName $signature');
 		#end
 
-	// -------o misc
+		var mirrorName:String = getMirrorName(variableName, "jni");
+		var resultVariable = createVariable(mirrorName, result, field.pos);
+		var returnType:String = result.ret.getParameters( )[0].name;
+		var returnExpr = null;
+		var isStaticMethod = isStaticField(field);
 
+		if (returnType != "Void")
+		{
+			//Switching the return type to dynamic
+			result.ret = DYNAMIC; 
+
+			returnExpr = macro
+			{
+				#if verbose_mirrors
+				var args:Array<Dynamic> = $a{argumentNames};
+				trace( "call with args ::: " + args);
+				#end
+				return $i{mirrorName}($a{argumentNames});
+			};
+		}
+		else
+			returnExpr = macro $i{mirrorName}($a{argumentNames});
+
+		result.expr = macro
+		{
+			if ($i{mirrorName} == null)
+			{
+				#if verbose_mirrors
+				trace("Lib not loaded, loading it");
+				trace($v{packageName} + " :: " + $v{variableName} 
+					+ ' :: signature '+$v{signature});
+				#end
+
+				if ($v{isStaticMethod})
+					$i{mirrorName} = openfl.utils.JNI.createStaticMethod(
+						$v{packageName}, $v{variableName}, $v{signature});
+				else
+					$i{mirrorName} = openfl.utils.JNI.createMemberMethod(
+						$v{packageName}, $v{variableName}, $v{signature});
+			}
+			
+			$returnExpr;
+		}
+
+		return resultVariable;
+	}
+
+	static function getMirrorName(name:String, target:String = "cpp"):String
+	{
+		return 'mirror_' + target + '_' + name;
+	}
+
+	static function cpp(field:Field, packageName:String, ?name:String, 
+		?type:String ) : Field
+	{
+		var func:Function = FieldTool.getFunction(field);
+
+		var argsCount:Int = func.args.length;
+		var argumentNames:Array<Expr> = getArgsNames(func);
+		
+		var mirrorName:String = getMirrorName(name, "cpp");
+		var fieldVariable = createVariable(mirrorName, func, field.pos);
+		var returnExpr = macro "";
+
+		
+		#if verbose_mirrors
+		Sys.println('[$type] $packageName \t $name ($argsCount)');
+		#end
+
+		if (func.ret.getParameters( )[ 0 ].name == "Void")
+			returnExpr = macro $i{mirrorName}($a{argumentNames});
+		else
+			returnExpr = macro return $i{mirrorName}($a{argumentNames});
+
+		func.expr = macro
+		{
+			if ($i{mirrorName} == null)
+			{
+				#if verbose_mirrors
+				trace("Lib not loaded, loading it");
+				trace($v{packageName}+"::"+$v{name}+'($argsCount)');
+				#end
+
+				$i{mirrorName} = cpp.Lib.load($v{packageName}, $v{name}, 
+					$v{argsCount});
+			}
+			$returnExpr;
+		}
+
+		return fieldVariable;
+	}
+
+	static function createVariable(variableName:String, refFunction:Function, 
+		positon:Position):Field
+	{
+		var types = [for (arg in refFunction.args) arg.type];
+		var fieldType : FieldType = FVar(TFunction(types, refFunction.ret));
+			
+		return
+		{
+			name	: variableName,
+			doc		: null,
+			meta	: [],
+			access	: [APublic,AStatic],
+			kind	: fieldType,
+			pos		: positon
+		};
+	}
+
+	static function getString(e:Expr):String
+	{
+		if (e == null)
+			return null;
+
+		return switch ( e.expr.getParameters( )[ 0 ] )
+		{
+			case CString(s):
+				s;
+
+			default:
+				null;
+		}
+	}
+
+	static inline function getArgsNames(func:Function):Array<Expr>
+	{
+		var result:Array<Expr> = [for (a in func.args) macro $i{ a.name }];
+		return result;
+	}
+
+	static inline function isStaticField(field:Field):Bool
+	{
+		var result = Lambda.has(field.access, AStatic);
+		return result;
+	}
+}
+
+class JniTools
+{
+	public static function getSignature(field:Field):String
+	{
+		var func:Function = FieldTool.getFunction(field);
+		var signature = "(";
+		for(arg in func.args)
+			signature += translateArg(arg, field.pos);
+		
+		var returnType:Null<Type> = func.ret.toType();
+
+		signature += ")" + translateType(returnType, field.pos);
+
+		return signature;
+	}
+
+	public static function translateArg(arg:FunctionArg, pos:Position):String
+	{
+		var argType:Null<Type> = arg.type.toType();
+		return translateType(argType, pos);
+	}
+
+	public static function translateType(argType:Null<Type>, pos:Position):String
+	{
+		return switch (argType)
+		{
+			case TAbstract(cf, a ):
+				translateAbstractType(cf.get(), pos);
+
+			case TDynamic(t):
+				if (Context.defined("openfl"))
+					"Lorg/haxe/lime/HaxeObject;";
+				else
+					"Lorg/haxe/nme/HaxeObject;";
+
+			default:
+				translateArgType(argType, pos);
+		}	
+	}
+
+	public static function translateArgType(type:Null<Type>, pos:Position):String
+	{
+		return switch (type)
+		{
+			case TInst(t, params):
+				translateSubArgType(type, params, pos);
+
+			default:
+				Context.fatalError(
+					"Unsupported Type ::: " + type.getParameters()[0], pos);
+		}
+	}
+
+	public static function translateSubArgType(type:Null<Type>, params:Array<Type>, 
+		pos:Position):String
+	{
+		var result:String;
+		switch (type.getParameters()[0].get().name)
+		{
+			case "String":
+				result = "Ljava/lang/String;";
+
+			case "Array":
+				result = "[" + translateType(params[0], pos);
+
+			default:
+				var classType:ClassType = type.getParameters()[0].get();
+				result = "L"+classType.pack.join("/") 
+					+ (classType.pack.length == 0 ? "" : "/" ) 
+					+ classType.name+";";
+		}
+
+		return result;
+	}
+
+	public static function translateAbstractType(a:AbstractType, pos:Position):String
+	{
+		var result:String = null;
+		result = switch (a.name)
+		{
+			case "Float":
+				"F";
+
+			case "Bool":
+				"Z";
+
+			case "Int":
+				"I";
+
+			case "Void":
+				"V";
+
+			default:
+				Context.fatalError("Unsupported abstract type ::: "+a.name, pos);
+		}
+
+		return result;
+	}
+}
+
+class FieldTool
+{
+	public static function getFunction(field:Field):Function
+	{
+		var result:Function;
+		switch (field.kind)
+		{
+			case FFun(f):
+				result = f;
+
+			default:
+				Context.error("Only function are supported", field.pos);
+		}
+		return result;
+	}
+}
+
+class MetaDataTools
+{
+
+	public static function has(metas:Metadata, metaName:String):Bool
+	{
+		var result = false;
+		for(meta in metas)
+		{
+			if (meta.name == metaName)
+			{
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
+
+	public static function get(metas:Metadata, metaName:String):MetadataEntry
+	{
+		var result:MetadataEntry = null;
+		for(meta in metas)
+		{
+			if (meta.name == metaName)
+			{
+				result = meta;
+				break;
+			}
+		}
+		return result;
+	}
+
+	#end
+}
+
+typedef ContextConfig=
+{
+	@:optional var cppPrimitivePrefix:String;
+	@:optional var cppDefaultLibrary:String;
 }
