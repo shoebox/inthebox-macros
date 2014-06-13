@@ -196,7 +196,7 @@ class MacroMirrors
 			{
 				#if verbose_mirrors
 				trace("Lib not loaded, loading it");
-				trace($v{packageName} + " :: " + $v{mirrorName} 
+				trace($v{packageName} + " :: " + $v{variableName} 
 					+ ' :: signature '+$v{signature});
 				#end
 
