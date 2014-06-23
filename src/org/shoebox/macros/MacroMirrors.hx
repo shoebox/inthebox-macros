@@ -400,7 +400,28 @@ class JniTools
 
 			default:
 				#if (haxe_ver >= 3.1)
-				Context.fatalError("Unsupported abstract type ::: "+a.name, pos);
+				function err(){
+					Context.fatalError("Unsupported abstract type ::: "+a.name, pos);
+					return "ERROR";
+				}
+				
+				var ct = a.type;
+				switch(ct) {
+					case TAbstract( t , _ ): 
+						var concreteT = t.get().name;
+						switch(concreteT) {
+							case "Float": 	"F";
+							case "Bool":	"Z";
+							case "Int":	"I";
+							case "Void":	"V";
+							default:  err();
+						}
+						
+					default: err();
+				}
+				
+				
+				err();
 				#end
 		}
 
