@@ -352,8 +352,10 @@ class JniTools
 				translateSubArgType(type, params, pos);
 
 			default:
+				#if (haxe_ver >= 3.1)
 				Context.fatalError(
 					"Unsupported Type ::: " + type.getParameters()[0], pos);
+				#end
 		}
 	}
 
@@ -397,7 +399,9 @@ class JniTools
 				"V";
 
 			default:
+				#if (haxe_ver >= 3.1)
 				Context.fatalError("Unsupported abstract type ::: "+a.name, pos);
+				#end
 		}
 
 		return result;
