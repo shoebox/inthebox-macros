@@ -156,12 +156,16 @@ class MacroMirrors
 		var result:Function = FieldTool.getFunction(field);
 		if (result.ret == null)
 			result.ret = VOID;
-		
+	
+		var isStatic = isStaticField(field);		
 		var argumentNames:Array<Expr> = getArgsNames(result);
-		var signature = JniTools.getSignature(field);
+		var signature = JniTools.getSignature(field, !isStatic);
 
-		if (!isStaticField(field))
+		if (!isStatic)
+		{
+			argumentNames.shift();
 			result.args[0].type = DYNAMIC;
+		}
 
 		#if verbose_mirrors
 		Sys.println('[JNI] $packageName \t $variableName $signature');
@@ -306,11 +310,16 @@ class MacroMirrors
 
 class JniTools
 {
-	public static function getSignature(field:Field):String
+	public static function getSignature(field:Field, nonStatic:Bool):String
 	{
 		var func:Function = FieldTool.getFunction(field);
 		var signature = "(";
-		for(arg in func.args)
+
+		var args = func.args;
+		if(nonStatic)
+			args.shift();
+
+		for(arg in args)
 			signature += translateArg(arg, field.pos);
 		
 		var returnType:Null<Type> = func.ret.toType();
