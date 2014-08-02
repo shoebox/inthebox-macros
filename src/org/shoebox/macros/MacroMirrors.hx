@@ -161,12 +161,6 @@ class MacroMirrors
 		var argumentNames:Array<Expr> = getArgsNames(result);
 		var signature = JniTools.getSignature(field, !isStatic);
 
-		if (!isStatic)
-		{
-			argumentNames.shift();
-			result.args[0].type = DYNAMIC;
-		}
-
 		#if verbose_mirrors
 		Sys.println('[JNI] $packageName \t $variableName $signature');
 		#end
@@ -298,7 +292,7 @@ class MacroMirrors
 	static inline function getArgsNames(func:Function):Array<Expr>
 	{
 		var result:Array<Expr> = [for (a in func.args) macro $i{ a.name }];
-		return result;
+		return result.copy();
 	}
 
 	static inline function isStaticField(field:Field):Bool
@@ -315,7 +309,7 @@ class JniTools
 		var func:Function = FieldTool.getFunction(field);
 		var signature = "(";
 
-		var args = func.args;
+		var args = func.args.copy();
 		if(nonStatic)
 			args.shift();
 
