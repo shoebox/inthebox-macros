@@ -97,18 +97,37 @@ using tools.MetadataTools;
 
 	public static function translateAbstractType(type:AbstractType, pos:Position):String
 	{
-		var result:String = switch (type.name)
+		function error()
 		{
-			case "Bool" : "Z";
-			case "Float" : "F";
-			case "Int" : "I";
-			case "Void" : "V";
+			Context.fatalError("Unsupported abstract type ::: " + type.name, pos);
+			return "ERROR";
+		}
+
+		var result:String;
+		switch (type.name)
+		{
+			case "Bool" : result = "Z";
+			case "Float" : result = "F";
+			case "Int" : result = "I";
+			case "Void" : result = "V";
 			default:
+				#if (haxe_ver >= 3.1)
+				var complexType = type.type;
+				switch (complexType)
+				{
+					case TAbstract(t, _): 
+						var concreteT = t.get();
+						result = translateAbstractType(concreteT, pos);
+
+					default:
+						error();
+				}
+				#end
 		}
 
 		#if (haxe_ver >= 3.1)
 		if (result == null)
-			Context.fatalError("Unsupported abstract type ::: "  + type.name, pos);
+			error();
 		#end
 
 		return result;

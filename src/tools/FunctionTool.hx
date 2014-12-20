@@ -7,7 +7,7 @@ class FunctionTool
 	static inline function getArgsNames(func:Function):Array<Expr>
 	{
 		var result:Array<Expr> = [for (a in func.args) macro $i{a.name}];
-		return result;
+		return result.copy();
 	}
 
 	static inline function isStaticField(field:Field):Bool
