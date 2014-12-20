@@ -18,64 +18,12 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
 
-/**
- * ...
- * @author shoe[box]
- */
+class ShortCuts
+{
+	function new(){}
 
-class ShortCuts{
-
-	// -------o constructor
-
-		/**
-		* constructor
-		*
-		* @param
-		* @return	void
-		*/
-		public function new() {
-
-		}
-
-	// -------o public
-		#if macro
-
-		/**
-		*
-		*
-		* @public
-		* @return	void
-		*/
-		static public function inject( ) : Array<Field> {
-			return MacroInjector.inject( );
-		}
-
-		/**
-		*
-		*
-		* @public
-		* @return	void
-		*/
-		static public function mirrors( ) : Array<Field> {
-			return mirror.Mirror.build();//MacroMirrors.build( );
-		}
-
-		/**
-		*
-		*
-		* @public
-		* @return	void
-		*/
-		static public function errorReport( ) : Array<Field> {
-			return MacroErrReport.report( );
-		}
-
-		#end
-
-	// -------o protected
-
-
-
-	// -------o misc
-
+	static public function mirrors( ):Array<Field>
+	{
+		return mirror.Mirror.build();
+	}
 }

@@ -3,7 +3,6 @@ package mirror;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type.ClassType;
-import org.shoebox.macros.MacroMirrors.MetaDataTools;
 
 using tools.ExprTool;
 using tools.FieldTool;
