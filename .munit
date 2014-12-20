@@ -1,0 +1,6 @@
+version=munit
+src=test/src
+bin=bin
+report=report
+hxml=build.hxml
+classPaths=src

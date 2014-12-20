@@ -57,7 +57,7 @@ class ShortCuts{
 		* @return	void
 		*/
 		static public function mirrors( ) : Array<Field> {
-			return MacroMirrors.build( );
+			return mirror.Mirror.build();//MacroMirrors.build( );
 		}
 
 		/**
