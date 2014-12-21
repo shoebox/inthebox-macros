@@ -1,0 +1,45 @@
+## Flash 9+
+-main TestMain
+-lib munit
+-lib hamcrest
+-cp src
+-cp test/extension/src
+-cp test/src
+-swf-version 11
+-swf bin/as3_test.swf
+
+--next
+
+## JavaScript
+-main TestMain
+-lib munit
+-lib hamcrest
+-cp src
+-cp test/extension/src
+-cp test/src
+-js bin/js_test.js
+
+--next
+
+## Neko
+-main TestMain
+-lib munit
+-lib hamcrest
+-cp src
+-cp test/extension/src
+-cp test/src
+-neko bin/neko_test.n
+
+--next
+
+## CPP
+-main TestMain
+-lib munit
+-lib hamcrest
+-cp src
+-cp test/extension/src
+-cp test/src
+#-D HXCPP_M64
+-cpp bin/cpp_test
+
+-cmd haxelib run openfl test cpp -debug
