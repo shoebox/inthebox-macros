@@ -3,6 +3,7 @@ import massive.munit.TestSuite;
 import CppCallTest;
 import CppTest;
 import JniCallTest;
+import JniNonStaticTest;
 import JniTest;
 
 /**
@@ -20,6 +21,7 @@ class TestSuite extends massive.munit.TestSuite
 		add(CppCallTest);
 		add(CppTest);
 		add(JniCallTest);
+		add(JniNonStaticTest);
 		add(JniTest);
 	}
 }

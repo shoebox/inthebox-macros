@@ -18,9 +18,10 @@
 	
 	<target id="NDLL" output="${LIBPREFIX}testextension${MSVC_LIB_VERSION}${DEBUGEXTRA}${LIBEXTRA}" tool="linker" toolid="${STD_MODULE_LINK}">
 		
-		<outdir name="../ndll/${BINDIR}"/>
-		<ext value=".ndll" unless="iphone"/>
 		<files id="common"/>
+		<outdir name="../ndll/${BINDIR}"/>
+		<ext value=".ndll"/>
+		<ext value=".so" if="android || iphone"/>
 		
 	</target>
 	

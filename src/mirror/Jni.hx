@@ -14,6 +14,8 @@ using tools.VariableTool;
 
 class Jni
 {
+	static var DYNAMIC = TPath({name:"Dynamic", pack:[], params:[], sub:null});
+
 	public function new(){}
 
 	public static function build(field:Field, localClass:ClassType):Field
@@ -36,10 +38,6 @@ class Jni
 		field.meta.push(entryPackage);
 		#end
 
-		#if (verbose_mirrors)
-		Sys.println('$jniPackage // $jniPrimitive // $jniSignature');
-		#end
-
 		var func = field.getFunction();
 		var fieldName = getMirrorName(field.name);
 		var args = func.getArgsNames();
@@ -47,6 +45,29 @@ class Jni
 		var returnExpr = func.createReturnExpr(fieldName, args);
 		var result = func.create(fieldName, field.pos);
 		var isStaticMethod = field.isStaticField();
+
+		#if (verbose_mirrors)
+		Sys.println('[Mirror] Static : ' + isStaticMethod 
+			+ ' --------------------------------------------------------');
+		Sys.println('\tPackage = $jniPackage');
+		Sys.println('\tPrimitive = $jniPrimitive');
+		Sys.println('\tSignature = $jniSignature\n');
+		#end
+
+		if (!isStaticMethod)
+			func.args[0].type = DYNAMIC;
+
+		var returnTypeName = field.getFunction().ret.toString();
+		switch (returnTypeName)
+		{
+			case "Void", "Int", "Bool", "String", "Float":
+
+			case "Array<Float>", "Array<Int>", "Array<Bool>":
+
+			default:
+				field.getFunction().ret = DYNAMIC;
+		}	
+		
 		if (Context.defined("android"))
 		{
 			func.expr = macro

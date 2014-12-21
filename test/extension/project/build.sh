@@ -58,7 +58,7 @@ mac()
 	rm -rf NDLL"lib"LIB".iphonesim.a"
 	$HXCPP $VERBOSE $DEBUG $VERSION
 	sleep $DELAY
-	$HXCPP -DM64 $VERBOSE $VERSION
+	$HXCPP $VERBOSE $VERSION
 	sleep $DELAY
 }
 
@@ -67,9 +67,22 @@ mac64()
 	echo "\n\n\033[1;32mCompiling for OSX 64bit"
 	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
 	rm -rf NDLL"lib"LIB".iphonesim.a"
-	$HXCPP $VERBOSE $DEBUG $VERSION
+	$HXCPP $M64 $VERBOSE $DEBUG $VERSION
 	sleep $DELAY
-	$HXCPP -DM64 $VERBOSE $VERSION
+	$HXCPP $M64 $VERBOSE $VERSION
+	sleep $DELAY
+}
+
+android()
+{
+	echo "\n\n\033[1;32mCompiling for Android"
+	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
+	rm -rf NDLL"lib"LIB".iphonesim.a"
+	$HXCPP -Dandroid $VERBOSE $DEBUG $VERSION
+	$HXCPP -Dandroid -DHXCPP_ARMV7 $VERBOSE $DEBUG $VERSION
+	sleep $DELAY
+	$HXCPP -Dandroid $VERBOSE $VERSION
+	$HXCPP -Dandroid -DHXCPP_ARMV7 $VERBOSE $VERSION
 	sleep $DELAY
 }
 
@@ -94,6 +107,10 @@ case "$1" in
 		cleanup
 		mac64
 	;;
+	"android")
+		cleanup
+		android
+	;;
 	*)
 		cleanup
 		ios_armv6
@@ -101,6 +118,7 @@ case "$1" in
 		ios_simulator
 		mac
 		mac64
+		android
 	;;
 esac
 

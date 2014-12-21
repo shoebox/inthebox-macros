@@ -4,6 +4,8 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using haxe.macro.ComplexTypeTools;
+using haxe.macro.TypeTools;
 using haxe.macro.Tools;
 using tools.ExprTool;
 using tools.FieldTool;
@@ -60,14 +62,16 @@ using tools.MetadataTools;
  	{
  		var reference = FieldTool.getFunction(field);
  		var result = '(';
- 		for (arg in reference.args)
- 		{
+ 		var args = reference.args.copy();
+ 		if (!field.isStaticField())
+ 			args.shift();
+
+ 		for (arg in args)
  			result += translateArg(arg, field.pos);
- 		}
 
  		var returnType:Null<Type> = reference.ret.toType();
  		result += ")" + translateType(returnType, field.pos);
-
+ 		
  		return result;
  	}
 
@@ -161,9 +165,21 @@ using tools.MetadataTools;
 
 			default:
 				var classType:ClassType = type.getParameters()[0].get();
-				result = "L"+classType.pack.join("/") 
-					+ (classType.pack.length == 0 ? "" : "/" ) 
-					+ classType.name+";";
+				var metas = Context.getLocalClass().get().meta.get();
+				if (Context.getLocalClass().get().module == classType.module 
+					&& metas.has(TagDefaultLibrary))
+				{
+ 					var entry:MetadataEntry = metas.get(TagDefaultLibrary);
+ 					var raw = entry.params[0].getString();
+ 					var parts = raw.split('.');
+ 					result = "L" + parts.join('/') + '/' + Context.getLocalClass().get().name + ';';
+				}
+				else
+				{
+					result = "L" + classType.pack.join("/") 
+						+ (classType.pack.length == 0 ? "" : "/" ) 
+						+ classType.name+";";
+				}
 		}
 
 		return result;
