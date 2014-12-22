@@ -20,9 +20,6 @@ class Mirror
 	static inline var TagCppPrimitivePrefix = "CPP_PRIMITIVE_PREFIX";
 
 	static var VOID:ComplexType = TPath({name:"Void", pack:[], params:[], sub:null});
-	static var FLOAT:ComplexType = TPath({name:"Float", pack:[], params:[], sub:null});
-	static var INT:ComplexType = TPath({name:"Int", pack:[], params:[], sub:null});
-	static var BOOL:ComplexType = TPath({name:"Bool", pack:[], params:[], sub:null});
 	
 	function new(){}
 
