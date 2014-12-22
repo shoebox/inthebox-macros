@@ -55,7 +55,19 @@ using tools.MetadataTools;
  		var entry:MetadataEntry = field.meta.get(TagJni);
  		var params = entry.params;
  		var length = params.length;
- 		return (length > 0) ? entry.params[0].getString() : field.name;
+
+ 		var result = switch (length)
+ 		{
+ 			case 0 : field.name;
+ 			case 1 : entry.params[0].getString();
+ 			case 2 : entry.params[1].getString();
+ 			case _ : 
+ 				#if (haxe_ver >= 3.1)
+				Context.fatalError("Invalid number of arguments for the JNI tag", field.pos);
+				#end
+ 		}
+
+ 		return result;
  	}
 
  	public static function getSignature(field:Field):String
