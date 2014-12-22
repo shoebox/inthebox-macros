@@ -32,22 +32,18 @@ class DefaultBodyTest
 @:build(ShortCuts.mirrors())
 class TestDefault
 {
-	@DISABLED @JNI @CPP public static function testVoid2():Void;
-	@DISABLED @JNI @CPP public static function testVoid();
 	@DISABLED @JNI @CPP public static function test1():Bool;
 	@DISABLED @JNI @CPP public static function test2():String;
 	@DISABLED @JNI @CPP public static function test3():Float;
-	@DISABLED @JNI @CPP public static function test4():Dynamic
+	@DISABLED @JNI @CPP public static function test4():Dynamic;
+	@DISABLED @JNI @CPP public static function testCustomBool():Bool
 	{
-		return null;
+		return true;
 	};
 	@DISABLED @JNI @CPP public static function testCustomResponseString():String
 	{
 		return "osef";
 	};
-
-	@DISABLED @JNI @CPP public static function testCustomBool():Bool
-	{
-		return true;
-	};
+	@DISABLED @JNI @CPP public static function testVoid1();
+	@DISABLED @JNI @CPP public static function testVoid2():Void;
 }
