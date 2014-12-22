@@ -9,6 +9,7 @@ ARC="-DOBJC_ARC"
 M64="-DHXCPP_M64"
 LIB="downloadmanager"
 DELAY="0.5"
+COLOR="\n\n\\033[1;32m"
 
 cleanup()
 {
@@ -18,7 +19,7 @@ cleanup()
 
 ios_armv6()
 {
-	echo "\n\n\\033[1;32mCompiling for armv6"
+	echo "$COLOR Compiling for armv6"
 	sleep $DELAY
 	rm -rf NDLL"lib"LIB"-debug.iphoneos.a"
 	rm -rf NDLL"lib"LIB".iphoneos.a"
@@ -30,7 +31,7 @@ ios_armv6()
 
 ios_armv7()
 {
-	echo "\n\n\\033[1;32mCompiling for armv7"
+	echo "$COLOR Compiling for armv7"
 	rm -rf NDLL"lib"LIB"-debug.iphoneos-v7.a"
 	rm -rf NDLL"lib"LIB".iphoneos-v7.a"
 
@@ -42,7 +43,7 @@ ios_armv7()
 
 ios_simulator()
 {
-	echo "\n\n\033[1;32mCompiling for simulator"
+	echo "$COLOR Compiling for iOS simulator"
 	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
 	rm -rf NDLL"lib"LIB".iphonesim.a"
 	$HXCPP -Diphonesim $VERBOSE $DEBUG $ARC $VERSION $GCC
@@ -53,7 +54,7 @@ ios_simulator()
 
 mac()
 {
-	echo "\n\n\033[1;32mCompiling for OSX"
+	echo "$COLOR Compiling for OSX"
 	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
 	rm -rf NDLL"lib"LIB".iphonesim.a"
 	$HXCPP $VERBOSE $DEBUG $VERSION
@@ -64,7 +65,7 @@ mac()
 
 mac64()
 {
-	echo "\n\n\033[1;32mCompiling for OSX 64bit"
+	echo "$COLOR Compiling for OSX 64bit"
 	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
 	rm -rf NDLL"lib"LIB".iphonesim.a"
 	$HXCPP $M64 $VERBOSE $DEBUG $VERSION
@@ -75,7 +76,7 @@ mac64()
 
 android()
 {
-	echo "\n\n\033[1;32mCompiling for Android"
+	echo "$COLOR Compiling for Android"
 	rm -rf NDLL"lib"LIB"-debug.iphonesim.a"
 	rm -rf NDLL"lib"LIB".iphonesim.a"
 	$HXCPP -Dandroid $VERBOSE $DEBUG $VERSION
