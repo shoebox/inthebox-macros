@@ -40,9 +40,23 @@ class CppTest
 
 	@Test public function testCall1()
 	{
-		#if cpp
-		var result = Test1.test1("toto", false);
-		Assert.areEqual(result, 1.23);
+		#if (cpp)
+			var error = false;
+			var result:Null<Float> = null;
+			try
+			{
+				result = Test1.test1("toto", false);
+			}
+			catch (e:Dynamic)
+			{
+				error = true;
+			}
+
+			#if openfl
+			Assert.isFalse(error);
+			#end
+
+			Assert.areEqual(result, 1.23);
 		#end
 	}
 	#end

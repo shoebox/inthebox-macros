@@ -30,15 +30,8 @@ class Mirror
 		var isCpp = #if munit true #else Context.defined("cpp") #end;
 		var isAndroid = #if munit true #else Context.defined("android") #end;
 		var isOpenFl = Context.defined("openfl") || Context.defined("nme");
-
-
-		var isEnabled = 
-			#if openfl
-				true;
-			#elseif munit
-				true;
-			#end
-
+		var isEnabled = #if (openfl || munit) true #else false #end;
+			
 		var fieldDisabled:Bool;
 		var func:Function;
 		if (isEnabled)
