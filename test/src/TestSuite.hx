@@ -1,5 +1,6 @@
 import massive.munit.TestSuite;
 
+import AbstractTest;
 import CppCallTest;
 import CppTest;
 import DefaultBodyTest;
@@ -19,6 +20,7 @@ class TestSuite extends massive.munit.TestSuite
 	{
 		super();
 
+		add(AbstractTest);
 		add(CppCallTest);
 		add(CppTest);
 		add(DefaultBodyTest);

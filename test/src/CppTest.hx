@@ -54,9 +54,9 @@ class CppTest
 
 			#if openfl
 			Assert.isFalse(error);
-			#end
-
+			Assert.isNotNull(result);
 			Assert.areEqual(result, 1.23);
+			#end
 		#end
 	}
 	#end

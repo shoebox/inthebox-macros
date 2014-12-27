@@ -45,7 +45,6 @@ class Mirror
 					func.ret = VOID;
 
 				fieldDisabled = field.meta.has(MirrorDisabledMeta);
-
 				if (!fieldDisabled)
 				{
 					if (isCpp && field.isCpp())
@@ -63,13 +62,15 @@ class Mirror
 					fields.push(result);
 					result = null;
 				}
-				else if (func.expr == null)
+				
+				if (func.expr == null)
 				{
 					func.expr = switch (func.ret.toString())
 					{
 						case "Bool" : macro return false;
 						case "Float" : macro return -1.0;
-						case "Void" : macro {
+						case "Void" : macro 
+						{
 							//Nothing
 						};
 						case "Int" : macro return 0;

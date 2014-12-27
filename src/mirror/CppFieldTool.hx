@@ -39,7 +39,7 @@ class CppFieldTool
 				entry = metas.get(TagPrimitivePrefix);
 				if (entry.params.length == 0)
 				{
-					Context.error("Cpp primitive tag is defined without value", 
+					Context.error("C++ primitive tag is defined without value", 
 						field.pos);
 				}
 
@@ -59,7 +59,7 @@ class CppFieldTool
 		var meta = localClass.meta.get();
 		if (entry.params.length == 0 && !meta.has(TagDefaultLibrary))
 		{
-			Context.error("Not default library defined globary or locally", 
+			Context.error("Not default C++ library defined globary or locally", 
 				field.pos);
 		}
 

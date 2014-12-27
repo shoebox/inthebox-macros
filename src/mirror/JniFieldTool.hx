@@ -79,11 +79,12 @@ using tools.MetadataTools;
  			args.shift();
 
  		for (arg in args)
+ 		{
  			result += translateArg(arg, field.pos);
+ 		}
 
  		var returnType:Null<Type> = reference.ret.toType();
  		result += ")" + translateType(returnType, field.pos);
- 		
  		return result;
  	}
 
