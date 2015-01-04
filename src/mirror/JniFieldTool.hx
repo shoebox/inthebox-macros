@@ -26,6 +26,7 @@ using tools.MetadataTools;
  		var result:String;
  		var metas = Context.getLocalClass().get().meta.get();
  		var entry:MetadataEntry = field.meta.get(TagJni);
+ 		var hasFileName:Bool;
  		if (metas.has(TagDefaultLibrary))
  		{
  			if (metas.get(TagDefaultLibrary).params.length == 0)
@@ -42,11 +43,24 @@ using tools.MetadataTools;
  		else
  		{
 			var params = entry.params;
-			result = (params.length > 1) ? params[0].getString()
- 				: Context.getLocalClass().get().pack.join('.');
+			if (params.length > 1)
+			{
+				result = params[0].getString();
+			}
+			else
+			{
+				result = Context.getLocalModule();
+				hasFileName = true;
+			}
  		}
 
- 		result = result.split('.').join('/') + "/" + Context.getLocalClass().get().name;
+ 		var splitted = result.split('.');
+
+ 		if (!hasFileName)
+ 			splitted.push(Context.getLocalClass().get().name);
+
+ 		result = splitted.join("/");
+ 		
  		return result;
  	}
 

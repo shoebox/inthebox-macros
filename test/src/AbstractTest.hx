@@ -52,5 +52,6 @@ abstract GATracker(Int)
 
 	@JNI public function testAbstractJni1(value:Float):Bool;
 	@JNI public static function testAbstractJni2(value:Float):Int;
+	@JNI public static function testAbstractJni3(value:Float):Dynamic;
 	@CPP('toto', 'osef') public function testCpp1(value:String):Int;
 }

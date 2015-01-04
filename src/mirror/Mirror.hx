@@ -40,6 +40,12 @@ class Mirror
 			var result:Field;
 			for (field in fields.copy())
 			{	
+				switch (field.kind)
+				{
+					case FFun(f):
+					default : continue;
+				}
+
 				func = field.getFunction();
 				if (func.ret == null)
 					func.ret = VOID;

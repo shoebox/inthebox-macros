@@ -61,11 +61,8 @@ class Jni
 		switch (returnTypeName)
 		{
 			case "Void", "Int", "Bool", "String", "Float":
-
 			case "Array<Float>", "Array<Int>", "Array<Bool>":
-
-			default:
-				field.getFunction().ret = DYNAMIC;
+			default : field.getFunction().ret = DYNAMIC;
 		}	
 		
 		if (Context.defined("android"))

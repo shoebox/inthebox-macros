@@ -75,9 +75,9 @@ class JniTest
 
 	@Test public function testPackage()
 	{
-		Assert.areEqual(meta1.method1.jni_package[0], "testpackage/TestJni1");
-		Assert.areEqual(meta1.method2.jni_package[0], "testpackage/TestJni1");
-		Assert.areEqual(meta1.method3.jni_package[0], "testpackage/TestJni1");
+		Assert.areEqual("testpackage/TestJni1", meta1.method1.jni_package[0]);
+		Assert.areEqual("testpackage/TestJni1", meta1.method2.jni_package[0]);
+		Assert.areEqual("testpackage/TestJni1", meta1.method3.jni_package[0]);
 	}
 
 	@Test public function testPackageMeta()
