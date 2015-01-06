@@ -22,7 +22,6 @@ class Cpp
 		var primitive = field.getPrimitiveName(localClass);
 		var func = field.getFunction();
 		var argsCount = func.args.length;
-
 		#if munit
 		var entryPrimitive = MetadataTools.create("cpp_primitive", field.pos, 
 			[macro $v{primitive}]);

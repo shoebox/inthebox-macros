@@ -19,7 +19,7 @@ class FieldTool
 		return result;
 	}
 
-	static inline function isStaticField(field:Field):Bool
+	public static inline function isStaticField(field:Field):Bool
 	{
 		var result = Lambda.has(field.access, AStatic);
 		return result;

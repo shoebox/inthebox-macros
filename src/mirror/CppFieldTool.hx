@@ -11,6 +11,7 @@ using tools.MetadataTools;
 class CppFieldTool
 {
 	public static inline var TagCpp = "CPP";
+	public static inline var TagiOS = "IOS";
 	public static inline var TagDefaultLibrary = "CPP_DEFAULT_LIBRARY";
 	public static inline var TagPrimitivePrefix = "CPP_PRIMITIVE_PREFIX";
 
@@ -19,10 +20,16 @@ class CppFieldTool
 		return field.meta.has(TagCpp);
 	}
 
+	public static function isIos(field:Field):Bool
+	{
+		return field.meta.has(TagiOS);
+	}
+
 	public static function getPrimitiveName(field:Field, 
 		localClass:ClassType):String
 	{
-		var entry:MetadataEntry = field.meta.get(TagCpp);
+		var entry:MetadataEntry = isIos(field) ? field.meta.get(TagiOS)
+			: field.meta.get(TagCpp);
 		var result:String;
 		if (entry.params.length > 1)
 		{
@@ -55,9 +62,11 @@ class CppFieldTool
 	public static function getLibraryName(field:Field, 
 		localClass:ClassType):String
 	{
-		var entry:MetadataEntry = field.meta.get(TagCpp);
+		var entry:MetadataEntry = isIos(field) ? field.meta.get(TagiOS)
+			: field.meta.get(TagCpp);
 		var meta = localClass.meta.get();
-		if (entry.params.length == 0 && !meta.has(TagDefaultLibrary))
+		if ((entry.params == null || entry.params.length == 0) 
+			&& !meta.has(TagDefaultLibrary))
 		{
 			Context.error("Not default C++ library defined globary or locally", 
 				field.pos);

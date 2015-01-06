@@ -28,6 +28,7 @@ class Mirror
 		var fields = Context.getBuildFields();
 
 		var isCpp = #if munit true #else Context.defined("cpp") #end;
+		var isIos = #if munit true #else Context.defined("ios") #end;
 		var isAndroid = #if munit true #else Context.defined("android") #end;
 		var isOpenFl = Context.defined("openfl") || Context.defined("nme");
 		var isEnabled = #if (openfl || munit) true #else false #end;
@@ -53,7 +54,7 @@ class Mirror
 				fieldDisabled = field.meta.has(MirrorDisabledMeta);
 				if (!fieldDisabled)
 				{
-					if (isCpp && field.isCpp())
+					if ((isCpp && field.isCpp()) || (isIos && field.isIos()))
 					{
 						result = Cpp.build(field, localClass);
 					}

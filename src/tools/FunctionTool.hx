@@ -4,19 +4,19 @@ import haxe.macro.Expr;
 
 class FunctionTool
 {
-	static inline function getArgsNames(func:Function):Array<Expr>
+	static public inline function getArgsNames(func:Function):Array<Expr>
 	{
 		var result:Array<Expr> = [for (a in func.args) macro $i{a.name}];
 		return result.copy();
 	}
 
-	static inline function isStaticField(field:Field):Bool
+	static public inline function isStaticField(field:Field):Bool
 	{
 		var result = Lambda.has(field.access, AStatic);
 		return result;
 	}
 
-	static function createReturnExpr(func:Function, name:String, 
+	static public function createReturnExpr(func:Function, name:String, 
 		args:Array<Expr>):Expr
 	{
 		var expr:Expr = macro "";
