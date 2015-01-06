@@ -4,6 +4,7 @@ import AbstractTest;
 import CppCallTest;
 import CppTest;
 import DefaultBodyTest;
+import IosTest;
 import JniCallTest;
 import JniNonStaticTest;
 import JniTest;
@@ -24,6 +25,7 @@ class TestSuite extends massive.munit.TestSuite
 		add(CppCallTest);
 		add(CppTest);
 		add(DefaultBodyTest);
+		add(IosTest);
 		add(JniCallTest);
 		add(JniNonStaticTest);
 		add(JniTest);
