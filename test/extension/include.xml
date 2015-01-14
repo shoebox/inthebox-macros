@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<ndll name="testextension"/>
+	
+	<source path="src" />
+	<!-- Use the following for an Android Java extension, not needed otherwise -->
+	
+	<dependency name="macrotest" path="dependencies/android" if="android" />
+	<android extension="org.test.extension.TestExtension" />
+	
+</project>
