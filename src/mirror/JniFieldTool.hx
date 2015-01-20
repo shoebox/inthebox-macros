@@ -53,7 +53,6 @@ using tools.MetadataTools;
 				if (metas.has(TagDefaultClassName) 
 					&& metas.get(TagDefaultClassName).params.length > 0)
 				{
-					trace("TagDefaultClassName");
 					hasFileName = false;
 				}
 				else
