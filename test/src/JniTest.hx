@@ -32,40 +32,38 @@ class JniTest
 
 	@Test public function testAbstractSignature1()
 	{
-		Assert.areEqual(meta1.method1.jni_signature[0], 
-			"(Ljava/lang/String;ZI)Ljava/lang/String;");
+		Assert.areEqual("(Ljava/lang/String;ZI)Ljava/lang/String;", 
+			meta1.method1.jni_signature[0]);
 	}
 
 	@Test public function testPrimitive1()
 	{
-		Assert.areEqual(meta1.method1.jni_primitive[0], "method1");
+		Assert.areEqual("method1", meta1.method1.jni_primitive[0]);
 	}
 
 	@Test public function testAbstractSignature2()
 	{
-		Assert.areEqual(meta1.method2.jni_signature[0], "(ZIF)Z");
+		Assert.areEqual("(ZIF)Z", meta1.method2.jni_signature[0]);
 	}
 
 	@Test public function testPrimitive2()
 	{
-		Assert.areEqual(meta1.method2.jni_primitive[0], "primitivename");
+		Assert.areEqual("primitivename", meta1.method2.jni_primitive[0]);
 	}
 
 	@Test public function testAbstractSignature3()
 	{
-		Assert.areEqual(meta1.method3.jni_signature[0], 
-			"(Ljava/lang/String;IF)V");
+		Assert.areEqual("(Ljava/lang/String;IF)V", meta1.method3.jni_signature[0]);
 	}
 
 	@Test public function testPrimitive3()
 	{
-		Assert.areEqual(meta1.method2.jni_primitive[0], "primitivename");
+		Assert.areEqual("primitivename", meta1.method2.jni_primitive[0]);
 	}
 
 	@Test public function testAbstractSignature4()
 	{
-		Assert.areEqual(meta1.method4.jni_signature[0], 
-			"(Ltestpackage/TestClass;ZI)I");
+		Assert.areEqual("(Ltestpackage/TestClass;ZI)I", meta1.method4.jni_signature[0]);
 	}
 
 	@Test public function testPrimitive4()
@@ -82,12 +80,12 @@ class JniTest
 
 	@Test public function testPackageMeta()
 	{
-		Assert.areEqual(meta1.method4.jni_package[0], "package/toto/com/TestJni1");
+		Assert.areEqual("package/toto/com/TestJni1", meta1.method4.jni_package[0]);
 	}
 
 	@Test public function testDefaultPackage()
 	{
-		Assert.areEqual(meta2.methodAlt.jni_package[0], 
-			"org/shoebox/testpackagealt/TestJni2");	
+		Assert.areEqual("org/shoebox/testpackagealt/TestJni2", 
+			meta2.methodAlt.jni_package[0]);	
 	}
 }
