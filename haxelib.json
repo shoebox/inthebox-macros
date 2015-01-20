@@ -5,7 +5,7 @@
 	"tags": ["hyperfiction", "macro","shoebox","openfl"],
 	"description": "Essential macros for native extensions",
 	"classPath":"src/",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"releasenote": "Refactoring | New features | Test unit",
 	"contributors": ["shoebox"]  
 }
