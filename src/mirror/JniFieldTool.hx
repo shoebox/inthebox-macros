@@ -14,6 +14,7 @@ using tools.MetadataTools;
  class JniFieldTool
  {
  	public static inline var TagJni = 'JNI';
+ 	public static inline var TagDefaultClassName = 'JNI_DEFAULT_CLASS_NAME';
  	public static inline var TagDefaultLibrary = 'JNI_DEFAULT_PACKAGE';
 
  	public static function isJni(field:Field):Bool
@@ -49,15 +50,42 @@ using tools.MetadataTools;
 			}
 			else
 			{
-				result = Context.getLocalModule();
-				hasFileName = true;
+				if (metas.has(TagDefaultClassName) 
+					&& metas.get(TagDefaultClassName).params.length > 0)
+				{
+					trace("TagDefaultClassName");
+					hasFileName = false;
+				}
+				else
+				{
+					result = Context.getLocalModule();
+					hasFileName = true;
+				}
 			}
  		}
 
  		var splitted = result.split('.');
-
  		if (!hasFileName)
- 			splitted.push(Context.getLocalClass().get().name);
+ 		{
+ 			if (metas.has(TagDefaultClassName))
+ 			{
+ 				if (metas.get(TagDefaultClassName).params.length == 0)
+	 			{
+	 				#if (haxe_ver >= 3.1)
+					Context.fatalError("Default package is defined " 
+						+ '($TagDefaultClassName) without argument', field.pos);
+					#end
+	 			}	
+	 			else
+	 			{
+	 				splitted.push(metas.get(TagDefaultClassName).params[0].getString());
+	 			}
+ 			}
+ 			else
+ 			{
+ 				splitted.push(Context.getLocalClass().get().name);
+ 			}
+ 		}
 
  		result = splitted.join("/");
  		

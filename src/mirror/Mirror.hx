@@ -32,25 +32,26 @@ class Mirror
 		var isAndroid = #if munit true #else Context.defined("android") #end;
 		var isOpenFl = Context.defined("openfl") || Context.defined("nme");
 		var isEnabled = #if (openfl || munit) true #else false #end;
-			
 		var fieldDisabled:Bool;
 		var func:Function;
-		if (isEnabled)
-		{
-			var localClass = Context.getLocalClass().get();
-			var result:Field;
-			for (field in fields.copy())
-			{	
-				switch (field.kind)
-				{
-					case FFun(f):
-					default : continue;
-				}
+		
+		var localClass = Context.getLocalClass().get();
+		var result:Field;
+		for (field in fields.copy())
+		{	
+			
+			switch (field.kind)
+			{
+				case FFun(f):
+				default : continue;
+			}
 
-				func = field.getFunction();
-				if (func.ret == null)
-					func.ret = VOID;
+			func = field.getFunction();
+			if (func.ret == null)
+				func.ret = VOID;
 
+			if (isEnabled)
+			{
 				fieldDisabled = field.meta.has(MirrorDisabledMeta);
 				if (!fieldDisabled)
 				{
@@ -69,20 +70,20 @@ class Mirror
 					fields.push(result);
 					result = null;
 				}
-				
-				if (func.expr == null)
+			}
+			
+			if (func.expr == null)
+			{
+				func.expr = switch (func.ret.toString())
 				{
-					func.expr = switch (func.ret.toString())
+					case "Bool" : macro return false;
+					case "Float" : macro return -1.0;
+					case "Void" : macro 
 					{
-						case "Bool" : macro return false;
-						case "Float" : macro return -1.0;
-						case "Void" : macro 
-						{
-							//Nothing
-						};
-						case "Int" : macro return 0;
-						default : macro return null;
-					}
+						//Nothing
+					};
+					case "Int" : macro return 0;
+					default : macro return null;
 				}
 			}
 		}
