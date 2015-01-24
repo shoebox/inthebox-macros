@@ -38,6 +38,13 @@ class Jni
 		field.meta.push(entryPackage);
 		#end
 
+		var isCreator = field.meta.has("JNI_CONSTRUCTOR");
+		if (isCreator) 
+		{
+			jniPrimitive = "<init>";
+			jniSignature = "()V";
+		}
+
 		var func = field.getFunction();
 		var fieldName = getMirrorName(field.name);
 		var args = func.getArgsNames();
@@ -49,12 +56,13 @@ class Jni
 		#if (verbose_mirrors)
 		Sys.println('[Mirror] Static : ' + isStaticMethod 
 			+ ' --------------------------------------------------------');
+		Sys.println('\tisCreator = ' + isCreator);
 		Sys.println('\tPackage = $jniPackage');
 		Sys.println('\tPrimitive = $jniPrimitive');
 		Sys.println('\tSignature = $jniSignature\n');
 		#end
 
-		if (!isStaticMethod)
+		if (!isCreator && !isStaticMethod)
 			func.args[0].type = DYNAMIC;
 
 		var returnTypeName = field.getFunction().ret.toString();

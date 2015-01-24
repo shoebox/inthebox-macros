@@ -97,15 +97,23 @@ using tools.MetadataTools;
  		var params = entry.params;
  		var length = params.length;
 
- 		var result = switch (length)
+ 		var result:String = null;
+ 		if (field.name == "new")
  		{
- 			case 0 : field.name;
- 			case 1 : entry.params[0].getString();
- 			case 2 : entry.params[1].getString();
- 			case _ : 
- 				#if (haxe_ver >= 3.1)
-				Context.fatalError("Invalid number of arguments for the JNI tag", field.pos);
-				#end
+ 			result = "<init>";
+ 		}
+ 		else
+ 		{
+ 			result = switch (length)
+	 		{
+	 			case 0 : field.name;
+	 			case 1 : entry.params[0].getString();
+	 			case 2 : entry.params[1].getString();
+	 			case _ : 
+	 				#if (haxe_ver >= 3.1)
+					Context.fatalError("Invalid number of arguments for the JNI tag", field.pos);
+					#end
+	 		}
  		}
 
  		return result;
@@ -213,6 +221,9 @@ using tools.MetadataTools;
 		{
 			case "String":
 				result = "Ljava/lang/String;";
+
+			case "JavaMap" :
+				result = "Ljava/util/Map;";
 
 			case "Array":
 				result = "[" + translateType(params[0], pos);
