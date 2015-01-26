@@ -147,17 +147,15 @@ using tools.MetadataTools;
 	{
 		return switch (argType)
 		{
-			case TAbstract(cf, a ):
-				translateAbstractType(cf.get(), pos);
-
-			case TDynamic(t):
+			case TType(t, p) : translateType(t.get().type , pos);
+			case TAbstract(cf, a ) : translateAbstractType(cf.get(), pos);
+			case TDynamic(t) :
 				if (Context.defined("openfl"))
 					"Lorg/haxe/lime/HaxeObject;";
 				else
 					"Lorg/haxe/nme/HaxeObject;";
 
-			default:
-				translateArgType(argType, pos);
+			default : translateArgType(argType, pos);
 		}	
 	}
 
@@ -173,8 +171,10 @@ using tools.MetadataTools;
 		switch (type.name)
 		{
 			case "Bool" : result = "Z";
+			case "Double" : result = "D";
 			case "Float" : result = "F";
 			case "Int" : result = "I";
+			case "Long" : result = "J";
 			case "Void" : result = "V";
 			default:
 				#if (haxe_ver >= 3.1)
@@ -219,31 +219,52 @@ using tools.MetadataTools;
 		var result:String;
 		switch (type.getParameters()[0].get().name)
 		{
-			case "String":
-				result = "Ljava/lang/String;";
-
-			case "JavaMap" :
-				result = "Ljava/util/Map;";
-
-			case "Array":
-				result = "[" + translateType(params[0], pos);
-
+			case "Array": result = "[" + translateType(params[0], pos);
+			case "Double" : result = "D";
+			case "JavaMap" : result = "Ljava/util/Map;";
+			case "Long" : result = "J";
+			case "String" : result = "Ljava/lang/String;";
 			default:
 				var classType:ClassType = type.getParameters()[0].get();
+				var parts:Array<String>;
 				var metas = Context.getLocalClass().get().meta.get();
 				if (Context.getLocalClass().get().module == classType.module 
 					&& metas.has(TagDefaultLibrary))
 				{
- 					var entry:MetadataEntry = metas.get(TagDefaultLibrary);
- 					var raw = entry.params[0].getString();
- 					var parts = raw.split('.');
- 					result = "L" + parts.join('/') + '/' + Context.getLocalClass().get().name + ';';
+					var entry:MetadataEntry = metas.get(TagDefaultLibrary);
+					var className = Context.getLocalClass().get().name;
+					if (metas.has(TagDefaultClassName))
+					{
+						var entry = metas.get(TagDefaultClassName);
+						className = entry.getStringParam(0);
+					}
+					var raw = entry.params[0].getString();
+ 					parts = raw.split('.');
+ 					result = "L" + parts.join('/') + '/' + className + ';';
 				}
 				else
 				{
-					result = "L" + classType.pack.join("/") 
-						+ (classType.pack.length == 0 ? "" : "/" ) 
-						+ classType.name+";";
+					var pack:Array<String> = null;
+					if (classType.meta.has(TagDefaultLibrary))
+					{
+						var entry = classType.meta.get().get(TagDefaultLibrary);
+						pack = entry.getStringParam(0).split(".");
+					}
+					else
+					{
+						pack = classType.pack;
+					}
+
+					var className = classType.name;
+					if (classType.meta.has(TagDefaultClassName))
+					{
+						var entry = classType.meta.get().get(TagDefaultClassName);
+						className = entry.getStringParam(0);
+					}
+
+					result = "L" + pack.join("/") 
+						+ (pack.length == 0 ? "" : "/" ) 
+						+ className + ";";
 				}
 		}
 
