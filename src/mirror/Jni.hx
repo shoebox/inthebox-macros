@@ -38,6 +38,13 @@ class Jni
 		field.meta.push(entryPackage);
 		#end
 
+		var isCreator = field.meta.has("JNI_CONSTRUCTOR");
+		if (isCreator) 
+		{
+			jniPrimitive = "<init>";
+			jniSignature = "()V";
+		}
+
 		var func = field.getFunction();
 		var fieldName = getMirrorName(field.name);
 		var args = func.getArgsNames();
@@ -49,22 +56,28 @@ class Jni
 		#if (verbose_mirrors)
 		Sys.println('[Mirror] Static : ' + isStaticMethod 
 			+ ' --------------------------------------------------------');
+		Sys.println('\tisCreator = ' + isCreator);
 		Sys.println('\tPackage = $jniPackage');
 		Sys.println('\tPrimitive = $jniPrimitive');
 		Sys.println('\tSignature = $jniSignature\n');
 		#end
 
-		if (!isStaticMethod)
-			func.args[0].type = DYNAMIC;
 
-		var returnTypeName = field.getFunction().ret.toString();
-		switch (returnTypeName)
+		// Keeping the argument type only for abstact types
+		for (arg in func.args)
 		{
-			case "Void", "Int", "Bool", "String", "Float":
-			case "Array<Float>", "Array<Int>", "Array<Bool>":
-			default : field.getFunction().ret = DYNAMIC;
-		}	
+			if (!isJniAbstract(arg.type))
+			{
+				arg.type = DYNAMIC;
+			}
+		}
 		
+		// Keeping the return type only for abstact types
+		if (!isJniAbstract(field.getFunction().ret))
+		{
+			field.getFunction().ret = DYNAMIC;
+		}
+
 		if (Context.defined("android"))
 		{
 			func.expr = macro
@@ -94,6 +107,19 @@ class Jni
 				$returnExpr;
 			}
 		}
+		return result;
+	}
+
+	static function isJniAbstract(ct:ComplexType):Bool
+	{
+		var name = ct.toString();
+		var result = switch (name)
+		{
+			case "Void", "Int", "Bool", "String", "Float" , "Long" : true;
+			case "Array<Float>", "Array<Int>", "Array<Bool>" : true;
+			default : false;
+		}	
+
 		return result;
 	}
 
