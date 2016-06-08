@@ -44,10 +44,21 @@ To call a method with a different name:
 public static function haxeMethodName(arg0:String, arg1:Int, arg2:String):Bool;
 ```
 
-To class a method from another class:
+To call a method from another class:
 ```haxe
 @JNI("com.example.otherpackage.OtherClass", "javaMethodName")
 public static function haxeMethodName(arg0:String, arg1:Int, arg2:String):Bool;
+```
+
+To set a different class as the default:
+```haxe
+@:build(ShortCuts.mirrors())
+@JNI_DEFAULT_PACKAGE("com.example.otherpackage")
+@JNI_DEFAULT_CLASS_NAME("OtherClass")
+class MyClass {
+    @JNI
+    public static function haxeMethodName(arg0:String, arg1:Int, arg2:String):Bool;
+}
 ```
 
 CPP & iOS calls:
