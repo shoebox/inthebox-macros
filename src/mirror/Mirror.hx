@@ -31,7 +31,7 @@ class Mirror
 		var isIos = #if munit true #else Context.defined("ios") #end;
 		var isAndroid = #if munit true #else Context.defined("android") #end;
 		var isOpenFl = Context.defined("openfl") || Context.defined("nme");
-		var isEnabled = #if (openfl || munit) true #else false #end;
+		var isEnabled = #if (openfl || lime || munit) true #else false #end;
 		var fieldDisabled:Bool;
 		var func:Function;
 		

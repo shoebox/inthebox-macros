@@ -77,15 +77,15 @@ class Jni
 						+ ' :: signature '+$v{jniSignature});
 					#end
 
-					#if (openfl || nme)
+					#if (openfl || lime ||  nme)
 					if ($v{isStaticMethod})
 					{
-						$i{fieldName} = openfl.utils.JNI.createStaticMethod(
+						$i{fieldName} = #if openfl openfl.utils#else lime.system#end.JNI.createStaticMethod(
 							$v{jniPackage}, $v{jniPrimitive}, $v{jniSignature});
 					}
 					else
 					{
-						$i{fieldName} = openfl.utils.JNI.createMemberMethod(
+						$i{fieldName} = #if openfl openfl.utils#else lime.system#end.JNI.createMemberMethod(
 							$v{jniPackage}, $v{jniPrimitive}, $v{jniSignature});
 					}
 					#end
