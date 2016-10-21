@@ -5,7 +5,7 @@
 	"tags": ["hyperfiction", "macro","shoebox","openfl"],
 	"description": "Essential macros for native extensions",
 	"classPath":"src/",
-	"version": "1.1.0",
-	"releasenote": "Refactoring | CPP default primtive prefix | CPP default library",
+	"version": "1.2.1",
+	"releasenote": "Refactoring | New features | Test unit",
 	"contributors": ["shoebox"]  
 }
