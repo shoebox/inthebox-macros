@@ -68,7 +68,7 @@ class CppFieldTool
 		if ((entry.params == null || entry.params.length == 0) 
 			&& !meta.has(TagDefaultLibrary))
 		{
-			Context.error("Not default C++ library defined globary or locally", 
+			Context.error("Not default C++ library defined globally or locally", 
 				field.pos);
 		}
 
