@@ -1,5 +1,6 @@
- package mirror;
+package mirror;
 
+#if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -19,7 +20,7 @@ using tools.MetadataTools;
 
  	public static function isJni(field:Field):Bool
  	{
- 		return field.meta.has(TagJni);
+		return field.meta.has(TagJni);
  	}
 
  	public static function getPackageName(field:Field):String
@@ -239,3 +240,5 @@ using tools.MetadataTools;
 		return result;
 	}
  }
+
+#end
