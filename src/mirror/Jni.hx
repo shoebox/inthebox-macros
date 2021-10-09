@@ -15,6 +15,8 @@ using tools.VariableTool;
 
 class Jni
 {
+	public static var lastJNICall:String = null;
+	
 	static var DYNAMIC = TPath({name:"Dynamic", pack:[], params:[], sub:null});
 
 	public function new(){}
@@ -92,6 +94,8 @@ class Jni
 					#end
 				}
 				
+				mirror.Jni.lastJNICall = $v{fieldName};
+				
 				$returnExpr;
 			}
 		}
@@ -102,5 +106,9 @@ class Jni
 	{
 		return 'mirror_jni_$name';
 	}
+}
+#else
+class Jni {
+	public static var lastJNICall:String = null;
 }
 #end
