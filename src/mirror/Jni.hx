@@ -1,5 +1,6 @@
 package mirror;
 
+#if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -102,3 +103,4 @@ class Jni
 		return 'mirror_jni_$name';
 	}
 }
+#end

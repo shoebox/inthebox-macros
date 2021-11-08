@@ -1,5 +1,6 @@
 package tools;
 
+#if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
@@ -25,3 +26,4 @@ class FieldTool
 		return result;
 	}
 }
+#end
