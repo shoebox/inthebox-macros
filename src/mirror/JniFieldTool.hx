@@ -12,125 +12,101 @@ using tools.ExprTool;
 using tools.FieldTool;
 using tools.MetadataTools;
 
- class JniFieldTool
- {
- 	public static inline var TagJni = 'JNI';
- 	public static inline var TagDefaultClassName = 'JNI_DEFAULT_CLASS_NAME';
- 	public static inline var TagDefaultLibrary = 'JNI_DEFAULT_PACKAGE';
+class JniFieldTool
+{
+	public static inline var TagJni = "JNI";
+	public static inline var TagDefaultClassName = "JNI_DEFAULT_CLASS_NAME";
+	public static inline var TagDefaultLibrary = "JNI_DEFAULT_PACKAGE";
 
- 	public static function isJni(field:Field):Bool
- 	{
+	public static function isJni(field:Field):Bool
+	{
 		return field.meta.has(TagJni);
- 	}
+	}
 
- 	public static function getPackageName(field:Field):String
- 	{
- 		var result:String;
- 		var metas = Context.getLocalClass().get().meta.get();
- 		var entry:MetadataEntry = field.meta.get(TagJni);
- 		var hasFileName:Bool;
- 		if (metas.has(TagDefaultLibrary))
- 		{
- 			if (metas.get(TagDefaultLibrary).params.length == 0)
- 			{
- 				#if (haxe_ver >= 3.1)
-				Context.fatalError("Default package is defined " 
-					+ "(JNI_DEFAULT_PACKAGE) without argument", field.pos);
-				#end
- 			}
+	public static function getPackageName(field:Field):String
+	{
+		var pack:Array<String> = null;
+		var className:String = null;
 
- 			result = entry.params.length > 0 ? entry.params[0].getString() 
- 				: metas.get(TagDefaultLibrary).params[0].getString();
- 		}
- 		else
- 		{
-			var params = entry.params;
-			if (params.length > 1)
+		var classMetas = Context.getLocalClass().get().meta.get();
+
+		if (classMetas.has(TagDefaultLibrary))
+		{
+			var tag = classMetas.get(TagDefaultLibrary).params[0].getString();
+			if(tag != null)
 			{
-				result = params[0].getString();
+				pack = tag.split(".");
 			}
-			else
+		}
+
+		if (classMetas.has(TagDefaultClassName))
+		{
+			className = classMetas.get(TagDefaultClassName).params[0].getString();
+		}
+
+		if (field.meta.has(TagJni) && field.meta.get(TagJni).params.length > 1)
+		{
+			var tag = field.meta.get(TagJni).params[0].getString();
+			if (tag != null)
 			{
-				if (metas.has(TagDefaultClassName) 
-					&& metas.get(TagDefaultClassName).params.length > 0)
-				{
-					hasFileName = false;
-				}
-				else
-				{
-					result = Context.getLocalModule();
-					hasFileName = true;
-				}
+				pack = tag.split(".");
+				className = pack.pop();
 			}
- 		}
+		}
 
- 		var splitted = result.split('.');
- 		if (!hasFileName)
- 		{
- 			if (metas.has(TagDefaultClassName))
- 			{
- 				if (metas.get(TagDefaultClassName).params.length == 0)
-	 			{
-	 				#if (haxe_ver >= 3.1)
-					Context.fatalError("Default package is defined " 
-						+ '($TagDefaultClassName) without argument', field.pos);
-					#end
-	 			}	
-	 			else
-	 			{
-	 				splitted.push(metas.get(TagDefaultClassName).params[0].getString());
-	 			}
- 			}
- 			else
- 			{
- 				splitted.push(Context.getLocalClass().get().name);
- 			}
- 		}
+		if (pack == null)
+		{
+			pack = Context.getLocalClass().get().pack;
+		}
 
- 		result = splitted.join("/");
- 		
- 		return result;
- 	}
+		if (className == null)
+		{
+			className = Context.getLocalClass().get().name;
+		}
 
- 	public static function getPrimitiveName(field:Field):String
- 	{
- 		var entry:MetadataEntry = field.meta.get(TagJni);
- 		var params = entry.params;
- 		var length = params.length;
+		return pack.join("/") + "/" + className;
+	}
 
- 		var result = switch (length)
- 		{
- 			case 0 : field.name;
- 			case 1 : entry.params[0].getString();
- 			case 2 : entry.params[1].getString();
- 			case _ : 
- 				#if (haxe_ver >= 3.1)
+	public static function getPrimitiveName(field:Field):String
+	{
+		var entry:MetadataEntry = field.meta.get(TagJni);
+		var params = entry.params;
+		var length = params.length;
+
+		var result = switch (length)
+		{
+			case 0 : field.name;
+			case 1 : entry.params[0].getString();
+			case 2 : entry.params[1].getString();
+			case _ : 
+				#if (haxe_ver >= 3.1)
 				Context.fatalError("Invalid number of arguments for the JNI tag", field.pos);
 				#end
- 		}
+		}
 
- 		return result;
- 	}
+		return result;
+	}
 
- 	public static function getSignature(field:Field):String
- 	{
- 		var reference = FieldTool.getFunction(field);
- 		var result = '(';
- 		var args = reference.args.copy();
- 		if (!field.isStaticField())
- 			args.shift();
+	public static function getSignature(field:Field):String
+	{
+		var reference = FieldTool.getFunction(field);
+		var result = "(";
+		var args = reference.args.copy();
+		if (!field.isStaticField())
+			args.shift();
 
- 		for (arg in args)
- 		{
- 			result += translateArg(arg, field.pos);
- 		}
+		for (arg in args)
+		{
+			result += translateArg(arg, field.pos);
+		}
 
- 		var returnType:Null<Type> = reference.ret.toType();
- 		result += ")" + translateType(returnType, field.pos);
- 		return result;
- 	}
+		var returnType:Null<Type> = reference.ret.toType();
+		result += ")" + translateType(returnType, field.pos);
 
- 	public static function translateArg(arg:FunctionArg, pos:Position):String
+		return result;
+	}
+
+	public static function translateArg(arg:FunctionArg, pos:Position):String
 	{
 		var argType = arg.type.toType();
 		return translateType(argType, pos);
@@ -224,10 +200,10 @@ using tools.MetadataTools;
 				if (Context.getLocalClass().get().module == classType.module 
 					&& metas.has(TagDefaultLibrary))
 				{
- 					var entry:MetadataEntry = metas.get(TagDefaultLibrary);
- 					var raw = entry.params[0].getString();
- 					var parts = raw.split('.');
- 					result = "L" + parts.join('/') + '/' + Context.getLocalClass().get().name + ';';
+					var entry:MetadataEntry = metas.get(TagDefaultLibrary);
+					var raw = entry.params[0].getString();
+					var parts = raw.split(".");
+					result = "L" + parts.join("/") + "/" + Context.getLocalClass().get().name + ';';
 				}
 				else
 				{
@@ -239,6 +215,6 @@ using tools.MetadataTools;
 
 		return result;
 	}
- }
+}
 
 #end
